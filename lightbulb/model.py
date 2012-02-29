@@ -3,15 +3,14 @@
 # Copyright 2012 James Thornton (http://jamesthornton.com)
 # BSD License (see LICENSE for details)
 #
-from beaker.cache import Cache as BeakerCache
+from beaker.cache import Cache
 
 from bulbs.neo4jserver import Graph as Neo4jGraph
 from bulbs.model import Node, NodeProxy, Relationship, build_data
 from bulbs.property import String, Integer, DateTime
 from bulbs.utils import extract, get_file_path
 
-
-cache = BeakerCache("lightbulb")
+cache = Cache("lightbulb")
 
 
 # Relationships
