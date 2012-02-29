@@ -1,3 +1,7 @@
+// 
+// Copyright 2012 James Thornton (http://jamesthornton.com)
+// BSD License (see LICENSE for details)
+//
 
 def save_blog_entry(entry_bundle, author_id, topic_bundles) {
 
