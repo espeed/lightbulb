@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-
+# -*- coding: utf-8 -*-
+#
+# Copyright 2012 James Thornton (http://jamesthornton.com)
+# BSD License (see LICENSE for details)
+#
 from lightbulb.changelog import ChangeLog
 
 # To have multiple pre-commit hook files, see...
