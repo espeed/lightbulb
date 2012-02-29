@@ -9,8 +9,6 @@ import docutils.core
 from datetime import datetime
 from fnmatch import fnmatch
 
-# Lightbulb: A Git-Powered, Neo4j-Backed Python Blog Engine for Heroku
-
 
 class Config(object):
     
