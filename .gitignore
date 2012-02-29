@@ -1,0 +1,16 @@
+.DS_Store?
+env/
+build/
+dist/
+old/
+.tox/
+.cache/
+.coverage
+.#*
+*.egg
+*.egg-info/
+*.pyc
+*.pyo
+*.class
+*~
+
