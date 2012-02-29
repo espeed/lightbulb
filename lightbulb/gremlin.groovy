@@ -1,5 +1,4 @@
 
-// do you need to encapsulate the entire thing in one func?
 def save_blog_entry(entry_bundle, author_id, topic_bundles) {
 
   def create_indexed_vertex = { final Map bundle ->
