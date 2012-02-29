@@ -3,7 +3,6 @@
 # Copyright 2012 James Thornton (http://jamesthornton.com)
 # BSD License (see LICENSE for details)
 #
-
 import os
 import re
 import time
@@ -11,11 +10,11 @@ import pickle
 from subprocess import Popen, PIPE
 from collections import OrderedDict
 
-    
 # Defaults
 LOG_NAME = "changelog.pickle"
 SOURCE_PATH = "source/"
 SOURCE_EXT = ".rst"
+
 
 class ChangeLog(object):
 

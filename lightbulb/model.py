@@ -3,7 +3,6 @@
 # Copyright 2012 James Thornton (http://jamesthornton.com)
 # BSD License (see LICENSE for details)
 #
-
 from logging import DEBUG
 from beaker.cache import Cache as BeakerCache
 
