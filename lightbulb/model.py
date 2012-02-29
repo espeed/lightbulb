@@ -89,7 +89,6 @@ class Entry(Node):
         params['author_id'] = cache.get("username:%s" % author)
         
         # Topic Tags
-        # TODO: Make sure this tags is a list and not a string
         tags = (tag.strip() for tag in data.pop('tags').split(','))
         topic_bundles = []
         for topic_name in tags:
@@ -113,6 +112,7 @@ class EntryProxy(NodeProxy):
         node._save(_data, kwds)
         return node
 
+    # Undefine standard methods; use save() instead.
     def create(self, _data=None, **kwds):
         return NotImplementedError
 
