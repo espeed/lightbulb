@@ -1,9 +1,7 @@
 import os
 import sys
 
-from .builder import Builder
-from .config import Config
-
+from .engine import Config, Builder
 
 def main():
     if len(sys.argv) not in (1, 2):
