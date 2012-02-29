@@ -6,6 +6,51 @@ from fnmatch import fnmatch
 
 # Lightbulb: A Git-Powered, Neo4j-Backed Python Blog Engine for Heroku
 
+
+class Config(object):
+    
+    def __init__(self, project_folder=None):
+        self.project_folder = project_folder or os.getcwd()
+        self.source_folder = "source"
+        self.template_folder = "_templates"
+        self.build_folder = "build"
+        self.timezone = "America/Chicago"
+
+
+class Fragment(object):
+
+    def __init__(self, config):
+        self.config = config
+
+    def is_new(self, build_path):
+        is_new = not os.path.exists(build_path)        
+        return is_new
+
+    def needs_build(self, source_path, build_path):
+        if self.is_new(build_path):
+            return True
+        return os.path.getmtime(build_path) < os.path.getmtime(source_path)
+
+    def make_destination_folder(self, build_path):
+        destination_folder = os.path.dirname(build_path)
+        if not os.path.isdir(destination_folder):
+            os.makedirs(destination_folder)
+            
+    def open_destination_file(self, build_path, mode="w"):
+        self.make_destination_folder(build_path)
+        return open(build_path, mode)
+
+    def write(self):
+        pass
+
+    def get_build_path(self, slug):
+        project_folder = self.config.project_folder
+        build_folder = self.config.build_folder
+        #print "P", project_folder, build_folder, relative_stub
+        build_path = os.path.join(project_folder, build_folder, slug, "index.html")
+        return build_path
+
+
 class Source(object):
 
     def __init__(self, config):
@@ -136,3 +181,65 @@ class Source(object):
     def get_abspath(self, file_name):
         source_path = os.path.join(self.config.project_folder, self.config.source_folder, file_name)
         return source_path
+
+
+class Builder(object):
+    def __init__(self, config):
+        self.source = Source(config)
+        self.fragment = Fragment(config)
+
+
+    def build(self, source_path, build_path):
+        key = self.fragment.is_new(build_path) and 'A' or 'U'
+        data = self.source.get_data(source_path)
+        fragment = data['fragment']
+        with self.fragment.open_destination_file(build_path) as fout:
+            fout.write(fragment.encode('utf-8') + '\n')
+        print key, build_path
+        return data
+
+    def run(self):
+        for source_file in self.source.get_all_files():
+            print source_file
+            slug = self.source.get_slug(source_file)
+            build_path = self.fragment.get_build_path(slug)
+            if self.fragment.needs_build(source_file, build_path):
+                self.build(source_file, build_path)
+        print "Done."
+        
+
+class Loader(object):
+
+    def __init__(self, graph, changelog, config):
+        self.graph = graph
+        self.changelog = changelog
+        self.config = config
+        self.source = Source(self.config)
+
+    def save(self):
+        log = self.changelog.get()
+        for filename in log:
+            status, timestamp = log[filename]
+            print status, filename, timestamp
+            #data = self.builder.get_context(filename)
+            #entry = self.graph.entries.create(data)
+            #print entry.eid, entry.map()
+          
+    def update_all(self):
+        for source_file in self.source.get_all_files():
+            data = self.source.get_data(source_file)
+            # TODO: if fragment exists...
+            entry = self.graph.entries.save(data)
+            print entry.eid, entry.map()
+
+    def get_last_updated(self):
+        # Get the lightbulb metadata node for entries
+        meta = self.graph.lightbulb.get_or_create(name="entries")        
+        return meta.get('last_updated')
+       
+    def set_last_updated(self, last_updated):
+        # Get the lightbulb metadata node for entries
+        meta = self.graph.lightbulb.get_or_create(name="entries")
+        meta.last_updated = last_updated
+        meta.save()
+
