@@ -5,8 +5,6 @@ import pickle
 from subprocess import Popen, PIPE
 from collections import OrderedDict
 
-# To have multiple pre-commit hook files, see...
-# http://zgp.org/~dmarti/tips/git-multiple-post-receive-hooks/
     
 # Defaults
 LOG_NAME = "changelog.pickle"
