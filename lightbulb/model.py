@@ -1,13 +1,13 @@
 from logging import DEBUG
+from beaker.cache import Cache as BeakerCache
 
 from bulbs.neo4jserver import Graph as Neo4jGraph
 from bulbs.model import Node, NodeProxy, Relationship, build_data
 from bulbs.property import String, Integer, DateTime
 from bulbs.utils import extract, get_file_path
 
-from cache import Cache
 
-cache = Cache()
+cache = BeakerCache("lightbulb")
 
 
 # Relationships
