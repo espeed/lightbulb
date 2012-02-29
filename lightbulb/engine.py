@@ -151,10 +151,9 @@ class Source(object):
         return source_path
 
 
-class Fragment(object):
-
+class Builder(object):
     def __init__(self, config):
-        self.config = config
+        self.source = Source(config)
 
     def is_new(self, build_path):
         is_new = not os.path.exists(build_path)        
@@ -174,9 +173,6 @@ class Fragment(object):
         self.make_destination_folder(build_path)
         return open(build_path, mode)
 
-    def write(self):
-        pass
-
     def get_build_path(self, slug):
         project_folder = self.config.project_folder
         build_folder = self.config.build_folder
@@ -184,18 +180,11 @@ class Fragment(object):
         build_path = os.path.join(project_folder, build_folder, slug, "index.html")
         return build_path
 
-
-class Builder(object):
-    def __init__(self, config):
-        self.source = Source(config)
-        self.fragment = Fragment(config)
-
-
     def build(self, source_path, build_path):
-        key = self.fragment.is_new(build_path) and 'A' or 'U'
+        key = self.is_new(build_path) and 'A' or 'U'
         data = self.source.get_data(source_path)
         fragment = data['fragment']
-        with self.fragment.open_destination_file(build_path) as fout:
+        with self.open_destination_file(build_path) as fout:
             fout.write(fragment.encode('utf-8') + '\n')
         print key, build_path
         return data
@@ -204,8 +193,8 @@ class Builder(object):
         for source_file in self.source.get_all_files():
             print source_file
             slug = self.source.get_slug(source_file)
-            build_path = self.fragment.get_build_path(slug)
-            if self.fragment.needs_build(source_file, build_path):
+            build_path = self.get_build_path(slug)
+            if self.needs_build(source_file, build_path):
                 self.build(source_file, build_path)
         print "Done."
         
