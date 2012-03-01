@@ -4,21 +4,22 @@
 # BSD License (see LICENSE for details)
 #
 import os
+import time
 import shutil
 import unittest
 import docutils
 import docutils.core
 
-from lightbulb import Config, Parser, Writer, Loader
+from lightbulb import Config, Parser, Writer, Loader, ChangeLog, Graph, cache
 
 current_dir = os.getcwd()
 project_dir = "%s/project" % current_dir
 source_dir = "%s/source" % project_dir
 build_dir = "%s/build" % project_dir
 source_abspath = "%s/lightbulb.rst" % source_dir
-another_file = "%s/anotherdir/another-file.rst" % source_dir
+another_file = "%s/another-file.rst" % source_dir
 fragment_abspath = "%s/lightbulb.html" % build_dir
-another_abspath = "%s/anotherdir/another-file.html" % build_dir
+another_abspath = "%s/another-file.html" % build_dir
 
 title = "Lightbulb"
 subtitle = "A Git-powered, Neo4j-backed blog engine for Heroku."
@@ -192,9 +193,42 @@ class WriterTestCase(unittest.TestCase):
 class LoaderTestCase(unittest.TestCase):
 
     def setUp(self):
+        self.graph = Graph()
+        self.changelog = ChangeLog()
         self.config = Config(project_dir)
-        self.writer = Writer(self.config)
+        self.loader = Loader(self.graph, self.changelog, self.config)
+        
+        data = dict(username="james", name="James Thornton")
+        james = self.graph.people.get_or_create("username", "james", data)
+        cache.put('username:james', james.eid)        
 
+        self.last_updated = int(time.time())
+
+    def test_init(self):
+        eid = cache.get('username:james')
+        assert type(eid) == int
+
+    def test_update_all(self):
+        self.loader.update_all()
+
+        entry1 = self.graph.entries.index.lookup(slug="lightbulb").next()
+        assert entry1.title == title
+        assert entry1.subtitle == subtitle
+
+        # TODO: Index lookups like this "anotherdir/another-file" break on Neo4j 
+        entry2 = self.graph.entries.index.lookup(slug="another-file").next()
+        assert entry2.title == "Another Title"
+        assert entry2.subtitle == "Another subtitle here."
+
+
+    def test_save(self):
+        pass
+
+    def test_set_and_get_last_updated(self):
+        self.loader.set_last_updated(self.last_updated)
+        last_updated = self.loader.get_last_updated()
+
+        assert last_updated == self.last_updated
 
 
 def suite():
@@ -202,6 +236,7 @@ def suite():
     suite.addTest(unittest.makeSuite(ConfigTestCase))
     suite.addTest(unittest.makeSuite(ParserTestCase))
     suite.addTest(unittest.makeSuite(WriterTestCase))
+    suite.addTest(unittest.makeSuite(LoaderTestCase))
 
     return suite
 

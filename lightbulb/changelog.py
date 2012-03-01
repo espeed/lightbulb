@@ -25,23 +25,35 @@ class ChangeLog(object):
 
     def get(self):
         try:
-            changelog = self._read()
+            data = self._read()
         except (IOError, EOFError) as e:
-            changelog =  OrderedDict()
-        return changelog
+            data =  OrderedDict()
+        return data
         
     def update(self):
+        # File exists so go ahead and read/write to the changlog
+        if self._changelog_exists() is False:
+            return 
+        
+        diff = self._get_diff()   
+        if not diff:
+            return
+
+        data = self.get()
+        data = self._write(data, diff)
+        self._display(data)
+        return data
+    
+    def _changelog_exists(self):
         # Don't create a changelog unless file exists
         if not os.path.isfile(self.log_name):
             print "CHANGELOG NOT FOUND - WILL ADD/UPDATE ALL ENTRIES IN DATABASE ON PUSH"
             # Remove the old changelog from git so it doesn't persist on the server
             self._remove_changelog()
-            return
-        # File exists so go ahead and read/write to the changlog
-        diff = self._get_diff()   
-        changelog = self.get()
-        changelog = self._write(changelog, diff)
-        self._display(changelog)
+            return False
+        return True
+
+
 
     def _read(self):
         with open(self.log_name, "r") as fin:
@@ -87,19 +99,20 @@ class ChangeLog(object):
         # git diff is NOT sorted by modified time
         #command = "git diff --cached --name-only"
         command = "git diff --cached --name-status"
-        return self._execute_git(command)
+        return self._execute(command)
 
     def _add_changelog(self):
         # Add the changelog to git after it has been updated.
         command = "git add %s" % self.log_name
-        self._execute_git(command)
+        self._execute(command)
 
     def _remove_changelog(self):
         # Doing this so the old changelog doesn't persist on the server
         command = "git rm %s" % self.log_name
-        print self._execute_git(command)
+        print self._execute(command)
         
-    def _execute_git(self, command):
+    def _execute(self, command):
+        # TODO: Will Popen work with Heroku single-process instances? It looks like it does.
         pipe = Popen(command, shell=True, cwd=".", stdout=PIPE, stderr=PIPE )
         (out, error) = pipe.communicate()
         pipe.wait()

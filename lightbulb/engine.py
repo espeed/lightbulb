@@ -217,8 +217,20 @@ class Loader(object):
         self.config = config
         self.parser = Parser(self.config)
 
+    def update_all(self):
+        for source_abspath in self.parser.get_all_files():
+            data = self.parser.get_data(source_abspath)
+            #print source_abspath, data
+            # TODO: if fragment exists...
+            entry = self.graph.entries.save(data)
+            #print entry.eid, entry.map()
+
+    def update_changed(self):
+        pass
+
     def save(self):
         log = self.changelog.get()
+        #print "LOG", log
         for filename in log:
             status, timestamp = log[filename]
             print status, filename, timestamp
@@ -226,21 +238,14 @@ class Loader(object):
             #entry = self.graph.entries.create(data)
             #print entry.eid, entry.map()
           
-    def update_all(self):
-        for source_abspath in self.parser.get_all_files():
-            data = self.parser.get_data(source_abspath)
-            # TODO: if fragment exists...
-            entry = self.graph.entries.save(data)
-            print entry.eid, entry.map()
+    def set_last_updated(self, last_updated):
+        # Metadata methods are Neo4j-only right now
+        self.graph.set_metadata("entries:last_updated", last_updated)
 
     def get_last_updated(self):
-        # Get the lightbulb metadata node for entries
-        meta = self.graph.lightbulb.get_or_create(name="entries")        
-        return meta.get('last_updated')
-       
-    def set_last_updated(self, last_updated):
-        # Get the lightbulb metadata node for entries
-        meta = self.graph.lightbulb.get_or_create(name="entries")
-        meta.last_updated = last_updated
-        meta.save()
+        # Metadata methods are Neo4j-only right now
+        result = self.graph.get_metadata("entries:last_updated")
+        last_updated = result.raw
+        return last_updated
+        
 
