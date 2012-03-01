@@ -98,10 +98,10 @@ class Parser(object):
         source_dir = os.path.join(self.config.project_dir, self.config.source_folder)
         return source_dir
 
-    
-    #def get_source_abspath(self, file_name):
-    #    source_abspath = os.path.join(self.config.project_dir, self.config.source_folder, file_name)
-    #    return source_abspath
+    # Loader
+    def get_source_abspath(self, file_name):
+        source_abspath = os.path.join(self.config.project_dir, file_name)
+        return source_abspath
      
     # Parser
     def get_source_path(self, source_abspath):
@@ -219,24 +219,41 @@ class Loader(object):
 
     def update_all(self):
         for source_abspath in self.parser.get_all_files():
-            data = self.parser.get_data(source_abspath)
-            #print source_abspath, data
-            # TODO: if fragment exists...
-            entry = self.graph.entries.save(data)
-            #print entry.eid, entry.map()
+            self.update_entry(source_abspath)
 
     def update_changed(self):
-        pass
+        update_count = 0
 
-    def save(self):
-        log = self.changelog.get()
-        #print "LOG", log
-        for filename in log:
-            status, timestamp = log[filename]
-            print status, filename, timestamp
-            #data = self.parser.get_data(filename)
-            #entry = self.graph.entries.create(data)
-            #print entry.eid, entry.map()
+        data = self.changelog.update()
+
+        if data is None:
+            return update_count
+
+        last_updated = self.get_last_updated()
+
+        # Data is an OrderedDict, most recent changes last
+        for source_path in reversed(data):
+            status, timestamp = data[source_path]
+            if self.already_updated(timestamp, last_updated):
+                break
+            source_abspath = self.parser.get_source_abspath(source_path)
+            update_count += self.update_entry(source_abspath)
+
+        return update_count
+        
+    def already_updated(self, timestamp, last_updated):
+        # Timestamps with a time before the last_updated time 
+        # were updated during the previous push
+        return (timestamp <= last_updated)
+        
+    def update_entry(self, source_abspath):
+        data = self.parser.get_data(source_abspath)
+        fragment_abspath = self.parser.get_fragment_abspath(source_abspath)
+        if os.path.exists(fragment_abspath):
+            # TODO: remove entry if fragment doesn't exist
+            entry = self.graph.entries.save(data)
+            return True
+        return False
           
     def set_last_updated(self, last_updated):
         # Metadata methods are Neo4j-only right now

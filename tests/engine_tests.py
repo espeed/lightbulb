@@ -12,8 +12,7 @@ import docutils.core
 
 from lightbulb import Config, Parser, Writer, Loader, ChangeLog, Graph, cache
 
-current_dir = os.getcwd()
-project_dir = "%s/project" % current_dir
+project_dir = os.getcwd()
 source_dir = "%s/source" % project_dir
 build_dir = "%s/build" % project_dir
 source_abspath = "%s/lightbulb.rst" % source_dir
@@ -178,6 +177,15 @@ class WriterTestCase(unittest.TestCase):
 
         assert os.path.exists(fragment_abspath)
 
+        # Do it again so both fragments will exist for loader test
+        another_fragment = self.writer.parser.get_fragment(another_file)
+        another_fragment_abspath = self.writer.parser.get_fragment_abspath(another_file)
+
+        self.writer.write_fragment(another_fragment, another_fragment_abspath)
+
+        assert os.path.exists(another_fragment_abspath)
+
+
     def test_make_fragment_dir(self):
         shutil.rmtree(build_dir, True)
         assert not os.path.isdir(build_dir)
@@ -220,9 +228,61 @@ class LoaderTestCase(unittest.TestCase):
         assert entry2.title == "Another Title"
         assert entry2.subtitle == "Another subtitle here."
 
+    def test_update_changed(self):
+        # TMP: Remove test repo and changelog
+        self.changelog._execute("rm -rf .git")
+        self.changelog._execute("rm changelog.pickle")
 
-    def test_save(self):
-        pass
+
+        # Make sure we're not going to clobber someone's existing repo
+        assert not os.path.isdir(".git")
+        assert not os.path.exists("changelog.pickle")
+
+        now = int(time.time())
+        self.loader.set_last_updated(now)
+        time.sleep(2)
+        
+        # Create test repo and changelog
+        self.changelog._execute("git init")
+        self.changelog._execute("touch changelog.pickle")
+        self.changelog._execute("git add .")
+        self.changelog._execute("git commit -m test commit")
+
+        # Changes need to be made
+        update_count = self.loader.update_changed()
+        assert update_count == 2
+
+        # Remove test repo and changelog
+        self.changelog._execute("rm -rf .git")
+        self.changelog._execute("rm changelog.pickle")
+
+
+    def test_no_update(self):
+        # TMP: Remove test repo and changelog
+        self.changelog._execute("rm -rf .git")
+        self.changelog._execute("rm changelog.pickle")
+
+        # Make sure we're not going to clobber someone's existing repo
+        assert not os.path.isdir(".git")
+        assert not os.path.exists("changelog.pickle")
+
+        # Create test repo and changelog
+        self.changelog._execute("git init")
+        self.changelog._execute("touch changelog.pickle")
+        self.changelog._execute("git add .")
+        self.changelog._execute("git commit -m test commit")
+
+        time.sleep(2)
+        now = int(time.time())
+        self.loader.set_last_updated(now)
+
+        # Changes need to be made
+        update_count = self.loader.update_changed()
+        assert update_count == 0
+
+        # Remove test repo and changelog
+        self.changelog._execute("rm -rf .git")
+        self.changelog._execute("rm changelog.pickle")
 
     def test_set_and_get_last_updated(self):
         self.loader.set_last_updated(self.last_updated)

@@ -44,7 +44,6 @@ class ChangeLogTestCase(unittest.TestCase):
         self.changelog._execute("touch changelog.pickle")
         self.changelog._execute("git add .")
         self.changelog._execute("git commit -m test commit")
-
         
         dataA = self.changelog.update()
         assert isinstance(dataA, OrderedDict)
@@ -55,19 +54,17 @@ class ChangeLogTestCase(unittest.TestCase):
         assert dataA == dataB
         assert len(dataB) > 1
         
-        status, timestamp = dataB['project/source/lightbulb.rst']
+        status, timestamp = dataB['source/lightbulb.rst']
         assert status == 'A'
         assert type(timestamp) == int
 
-
-        status, timestamp = dataB['project/source/another-file.rst']
+        status, timestamp = dataB['source/another-file.rst']
         assert status == 'A'
         assert type(timestamp) == int
 
     def tearDown(self):
         # Remove the repo we created in setUp
         self.changelog._execute("rm -rf .git")
-
         self.changelog._execute("rm changelog.pickle")
 
 def suite():

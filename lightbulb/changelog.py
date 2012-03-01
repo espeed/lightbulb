@@ -19,6 +19,7 @@ SOURCE_EXT = ".rst"
 class ChangeLog(object):
 
     def __init__(self, log_name=None, source_path=None, source_ext=None):
+        # TODO: make sure log goes in project dir
         self.log_name = log_name = LOG_NAME
         self.source_path = source_path or SOURCE_PATH
         self.source_ext = source_ext or SOURCE_EXT
@@ -53,38 +54,36 @@ class ChangeLog(object):
             return False
         return True
 
-
-
     def _read(self):
         with open(self.log_name, "r") as fin:
-            # changelog is an OrderedDict
-            changelog = pickle.load(fin)   
+            # changelog data is an OrderedDict
+            data = pickle.load(fin)   
             #items = sorted(files.items(), key=itemgetter(1,1))
-        return changelog
+        return data
         
-    def _write(self, changelog, diff):
+    def _write(self, data, diff):
         for status, filename in self._split_diff(diff):
             if re.search(self.source_path, filename) and filename.endswith(self.source_ext):
                 # Git diff is NOT sorted by modified time.
                 # We need it ordered by time so use timestamp instead
                 timestamp = self._current_timestamp()
                 # remove it from the dict and add it back so more recent entries are always last
-                changelog.pop(filename, None)
-                changelog[filename] = (status, timestamp)
+                data.pop(filename, None)
+                data[filename] = (status, timestamp)
                     
         # not using JSON because we want to maintain order in the dict
         with open(self.log_name, "w") as fout:
-            pickle.dump(changelog, fout)
+            pickle.dump(data, fout)
 
         # Add the changelog to git now that it has been updated.
         self._add_changelog()
 
-        return changelog
+        return data
 
-    def _display(self, changelog):
+    def _display(self, data):
         print "CHANGELOG"
-        for filename in changelog:
-            status, timestamp = changelog[filename]
+        for filename in data:
+            status, timestamp = data[filename]
             print timestamp, status, filename 
         print
 
