@@ -33,7 +33,7 @@ class ChangeLog(object):
         
     def update(self):
         # File exists so go ahead and read/write to the changlog
-        if self._changelog_exists() is False:
+        if self.exists() is False:
             return 
         
         diff = self._get_diff()   
@@ -45,7 +45,7 @@ class ChangeLog(object):
         self._display(data)
         return data
     
-    def _changelog_exists(self):
+    def exists(self):
         # Don't create a changelog unless file exists
         if not os.path.isfile(self.log_name):
             print "CHANGELOG NOT FOUND - WILL ADD/UPDATE ALL ENTRIES IN DATABASE ON PUSH"
