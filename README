@@ -3,6 +3,11 @@
           A Git-powered, Neo4j-backed blog engine for Heroku.
 
 
+What is Lightbulb?
+
+Lightbulbs is a Git-powered, Neo4j-backed blog engine for Heroku written in 
+Python.
+
 You get to write blog entries in Emacs (or your favorite editor) and use Git 
 for version control, without giving up the features of a dynamic app.
 
@@ -13,10 +18,24 @@ When you push to Heroku, the entry metadata will be automatically saved to
 Neo4j, and the HTML fragment generated from the ReStructuredText source file 
 will be served off disk.
 
+What do I need?
 
+* Neo4j Server or if your using Heroku, the Neo4j Add On
 
+And these Python modules:
 
-  
+* Bulbs 0.3 (https://github.com/espeed/bulbs)
+* Beaker 1.6.2 (https://github.com/bbangert/beaker)
+* Docutils 0.8 (http://docutils.sourceforge.net)
+
+Where are the docs?
+
+* http://bulbflow.com
+
+Where can I get help?
+
+* Neo4j User group (https://groups.google.com/forum/#!forum/neo4j)
+* Email me directly at james@jamesthornton.com.
 
 
 
