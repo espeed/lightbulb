@@ -9,7 +9,7 @@ for version control, without giving up the features of a dynamic app.
 Write blog entries in ReStructuredText, and style them with your website's 
 templating system. 
 
-When you push to Heroku, the entry metadata will be automatically written to 
+When you push to Heroku, the entry metadata will be automatically saved to 
 Neo4j, and the HTML fragment generated from the ReStructuredText source file 
 will be served off disk.
 
