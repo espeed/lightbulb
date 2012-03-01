@@ -8,8 +8,8 @@ What is Lightbulb?
 Lightbulb is a Git-powered, Neo4j-backed blog engine for Heroku written in 
 Python.
 
-You get to write blog entries in Emacs (or your favorite editor) and use Git 
-for version control, without giving up the features of a dynamic app.
+You get to write blog entries in Emacs (or your favorite text editor) and use 
+Git for version control, without giving up the features of a dynamic app.
 
 Write blog entries in ReStructuredText, and style them with your website's 
 templating system. 
