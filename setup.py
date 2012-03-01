@@ -51,14 +51,6 @@ def run_tests():
     from bulbs_tests import suite
     return suite()
 
-# Python 3
-install_requires = ['httplib2>=0.7.2', 'pyyaml>=3.10', 'six']
-if sys.version < '3':
-    install_requires.append('ujson>=1.15')
-else:
-    # argparse is in 3.2 but not 3.1
-    install_requires.append('argparse')
-
 setup (
     name = 'lightbulb',
     version = '0.1d',
@@ -73,7 +65,7 @@ setup (
     include_package_data=True,
     zip_safe=False,
     platforms='any',
-    install_requires=install_requires, 
+    install_requires=['docutils', 'beaker', 'bulbs'],
     classifiers = [
         "Programming Language :: Python",
         "Development Status :: 3 - Alpha",
