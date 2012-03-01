@@ -3,12 +3,14 @@
           A Git-powered, Neo4j-Backed blog engine for Heroku.
 
 
-You get to write blog entries in Emacs (or your favorite editor) and use Git for version control,
-without giving up the features of a dynamic app.
+You get to write blog entries in Emacs (or your favorite editor) and use Git 
+for version control, without giving up the features of a dynamic app.
 
-Write blog entries in a ReStructuredText, style them with your website's templating system. when 
-you push to Heroku, the entry metadata will be automatically written to Neo4j, and the HTML 
-fragment generated from the ReStructuredText source file will be served off disk.
+Write blog entries in a ReStructuredText, style them with your website's 
+templating system. when you push to Heroku, the entry metadata will be 
+automatically written to Neo4j, and the HTML fragment generated from the 
+ReStructuredText source file will be served off disk.
+
 
 
 
