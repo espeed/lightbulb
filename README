@@ -1,6 +1,6 @@
                                Lightbulb   
 
-          A Git-powered, Neo4j-Backed blog engine for Heroku.
+          A Git-powered, Neo4j-backed blog engine for Heroku.
 
 
 You get to write blog entries in Emacs (or your favorite editor) and use Git 
