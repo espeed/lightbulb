@@ -30,7 +30,7 @@ class run_audit(Command):
             print("Audit requires PyFlakes installed in your system.")
             sys.exit(-1)
 
-        dirs = ['bulbs', 'tests']
+        dirs = ['lightbulb', 'tests']
         # Add example directories
         #for dir in ['blog',]:
         #    dirs.append(os.path.join('examples', dir))
