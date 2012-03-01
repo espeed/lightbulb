@@ -9,8 +9,7 @@ import uuid
 import datetime
 from string import Template
 
-from .builder import Builder
-from .config import Config
+from .engine import Config, Builder
 
 
 def get_template(template_path):

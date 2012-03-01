@@ -12,23 +12,30 @@ from fnmatch import fnmatch
 
 class Config(object):
     
-    def __init__(self, project_folder=None):
-        self.project_folder = project_folder or os.getcwd()
+    def __init__(self, project_dir=None):
+        self.project_dir = project_dir or os.getcwd()
         self.source_folder = "source"
         self.build_folder = "build"
         self.timezone = "America/Chicago"
-
+        #self.current_directory = os.getcwd()
 
 class Source(object):
 
     def __init__(self, config):
         self.config = config
-        self.source_path = "%s/%s" % (config.project_folder, config.source_folder)
+        self.source_dir = "%s/%s" % (config.project_dir, config.source_folder)
         self.writer_name = 'html4css1'
 
-    def get_data(self, file_name):
-        source = self.get_source(file_name)
-        parts = self.get_publish_parts(source) 
+    # Builder
+    def get_fragment(self, source_abspath):
+        source = self.get_document_source(source_abspath)
+        parts = self.get_document_parts(source) 
+        return parts['fragment']
+
+    # Loader
+    def get_data(self, source_abspath):
+        source = self.get_document_source(source_abspath)
+        parts = self.get_document_parts(source) 
 
         data = dict()
         data['title'] = parts['title']
@@ -36,86 +43,117 @@ class Source(object):
         data['fragment'] = parts['fragment']
         
         # Extra metadata: docid, author, date, tags
-        meta = self._get_metadata(source, file_name) 
+        meta = self._get_metadata(source, source_abspath) 
         data.update(meta)  
 
         # Derived parts: slug, fragment_path, source_path 
-        slug = self.get_slug(file_name)
+        slug = self.get_slug(source_abspath)
         data['slug'] = slug
-        data['fragment_path'] = self.get_fragment_path(slug)
-        data['source_path'] = file_name
+        data['fragment_path'] = self.get_fragment_path(source_abspath)
+        data['source_path'] = self.get_source_path(source_abspath)
 
         return data
-        
-    def get_publish_parts(self, source):
+
+    # Source
+    def get_document_source(self, source_abspath):
+        def_source = self.get_substitution_definitions()
+        doc_source = self.read_source_file(source_abspath)
+        source = "\n".join([def_source, doc_source])
+        return source
+                
+    # Source
+    def get_document_parts(self, source):
         # http://docutils.sourceforge.net/docs/api/publisher.html#publish-parts-details
         settings = dict(initial_header_level=2) # do we need this?
         options = dict(source=source, writer_name=self.writer_name, settings_overrides=settings)
         parts = docutils.core.publish_parts(**options)
         return parts
-
-    def get_source(self, file_name):
-        def_source = self.get_substitution_definitions()
-        doc_source = self.read_file(file_name)
-        source = "\n".join([def_source, doc_source])
-        return source
-
+    
+    # Source
     def get_substitution_definitions(self):
         # Standard substitution definitions
         # http://docutils.sourceforge.net/docs/ref/rst/definitions.html
         target_filename = "substitutions.rst"
         current_dir = os.path.dirname(__file__)
-        file_path = os.path.normpath(os.path.join(current_dir, target_filename))
-        source = self.read_file(file_path)
+        source_abspath = os.path.normpath(os.path.join(current_dir, target_filename))
+        source = self.read_source_file(source_abspath)
         return source
 
-    def read_file(self,file_name):
-        source_file_path = file_name
-        fin = open(source_file_path, "r")
+    # Source
+    def read_source_file(self,source_abspath):
+        fin = open(source_abspath, "r")
         source = fin.read().decode('utf-8')
         return source       
 
-    def get_slug(self, file_name):
-        source_dir = self.get_dir()
-        relative_path = file_name.rpartition(source_dir)[-1].lstrip("/") 
+    # Source
+    def get_slug(self, source_abspath):
+        start = self.get_source_dir()
+        #relative_path = file_name.rpartition(source_dir)[-1].lstrip("/") 
+        relative_path = os.path.relpath(source_abspath, start)
         slug = os.path.splitext(relative_path)[0]
         return slug
 
-    def get_fragment_path(self, slug):
-        project_folder = self.config.project_folder
-        build_folder = self.config.build_folder
-        build_path = os.path.join(build_folder, slug, "index.html")
-        return build_path
+    # Source
+    def get_source_dir(self):
+        source_dir = os.path.join(self.config.project_dir, self.config.source_folder)
+        return source_dir
 
-    def _get_desination_file(self, file_name):        
-        destination_filename = self._get_desired_filename(file_name)
-        desination_file = os.path.join(self.config.project_folder,
-                                       self.config.get('output_folder'),
-                                       self.destination_filename)
-        return destination_file
+    
+    #def get_source_abspath(self, file_name):
+    #    source_abspath = os.path.join(self.config.project_dir, self.config.source_folder, file_name)
+    #    return source_abspath
+     
+    # Source
+    def get_source_path(self, source_abspath):
+        #source_path = os.path.join(self.config.source_folder, file_name)
+        #return source_path
+        start = self.config.project_dir
+        source_path = os.path.relpath(source_abspath, start)
+        return source_path
 
-    def _get_desired_filename(self, source_filename):
-        folder, basename = os.path.split(source_filename)
-        simple_name = os.path.splitext(basename)[0]
-        if simple_name == 'index':
-            suffix = 'index.html'
-        else:
-            suffix = os.path.join(simple_name, 'index.html')
-        return os.path.join(folder, suffix)
+    #def get_fragment_dir(self)
+    #    fagment_dir = os.path.join(self.config.project_dir, self.config.build_folder)
+    #    return fragment_dir
 
-    def _get_metadata(self, document, file_name):
-        doctree = docutils.core.publish_doctree(document)
+    # Builder
+    def get_fragment_abspath(self, source_abspath):
+        fragment_path = self.get_fragment_path(source_abspath)
+        return os.path.join(self.config.project_dir, fragment_path)
+
+    # Source
+    def get_fragment_path(self, source_abspath):
+        # /project/source/2012/hello.rst => /project/source/2012, hello.rst
+        head_dir, basename = os.path.split(source_abspath)
+
+        # /project/source/2012 => 2012 
+        start = self.get_source_dir()
+        fragment_folder = os.path.relpath(head_dir, start)
+
+        # hello.rst ==> hello
+        stub = os.path.splitext(basename)[0]  # remove the ext
+        filename = "%s.html" % stub        
+
+        # ==> build/2012/hello.html
+        fragment_path = os.path.join(self.config.build_folder, fragment_folder, filename)
+        return os.path.normpath(fragment_path)
+
+        
+        
+    # Source
+    def _get_metadata(self, source, source_abspath):
+        doctree = docutils.core.publish_doctree(source)
         docinfo = doctree.traverse(docutils.nodes.docinfo)
         try:
             meta = self._process_standard_fields(docinfo)
             meta = self._process_custom_fields(meta)
         except IndexError:
-            print "ERROR: Source file is missing data: %s" % file_name
+            print "ERROR: Source file is missing data: %s" % source_abspath
             raise
         for key, value in meta.items():
             meta[key] = value.astext()
         return meta
 
+    # Source
     def _process_standard_fields(self,docinfo):
         # Standard fields: date, author, etc.
         meta = {}
@@ -125,6 +163,7 @@ class Source(object):
             meta[key] = value
         return meta
 
+    # Source
     def _process_custom_fields(self, meta):
         # http://repo.or.cz/w/wrigit.git/blob/f045e5e7766e767c0b56bcb7a1ba0582a6f4f176:/rst.py
         field = meta['field']
@@ -133,71 +172,42 @@ class Source(object):
         del meta['field']
         return meta
         
+    # Builder, Loader
     def get_all_files(self):
-        source_dir = self.get_dir()
-        for dirpath, dirnames, filenames in os.walk(source_dir):
-            for filename in filenames:
+        source_dir = self.get_source_dir()
+        for root, dirs, files in os.walk(source_dir):
+            for filename in files:
                 # Ignore pattern: emacs autosave files. TODO: generalize this
                 if fnmatch(filename, "*.rst") and not fnmatch(filename, "*.#*"):
-                    source_path = os.path.join(dirpath, filename)
-                    yield source_path
-
-    def get_dir(self):
-        source_dir = os.path.join(self.config.project_folder, self.config.source_folder)
-        return source_dir
-
-    def get_abspath(self, file_name):
-        source_path = os.path.join(self.config.project_folder, self.config.source_folder, file_name)
-        return source_path
+                    source_abspath = os.path.join(root, filename)
+                    yield source_abspath
 
 
 class Builder(object):
     def __init__(self, config):
+        self.config = config
         self.source = Source(config)
 
-    def is_new(self, build_path):
-        is_new = not os.path.exists(build_path)        
-        return is_new
-
-    def needs_build(self, source_path, build_path):
-        if self.is_new(build_path):
-            return True
-        return os.path.getmtime(build_path) < os.path.getmtime(source_path)
-
-    def make_destination_folder(self, build_path):
-        destination_folder = os.path.dirname(build_path)
-        if not os.path.isdir(destination_folder):
-            os.makedirs(destination_folder)
-            
-    def open_destination_file(self, build_path, mode="w"):
-        self.make_destination_folder(build_path)
-        return open(build_path, mode)
-
-    def get_build_path(self, slug):
-        project_folder = self.config.project_folder
-        build_folder = self.config.build_folder
-        #print "P", project_folder, build_folder, relative_stub
-        build_path = os.path.join(project_folder, build_folder, slug, "index.html")
-        return build_path
-
-    def build(self, source_path, build_path):
-        key = self.is_new(build_path) and 'A' or 'U'
-        data = self.source.get_data(source_path)
-        fragment = data['fragment']
-        with self.open_destination_file(build_path) as fout:
-            fout.write(fragment.encode('utf-8') + '\n')
-        print key, build_path
-        return data
-
     def run(self):
-        for source_file in self.source.get_all_files():
-            print source_file
-            slug = self.source.get_slug(source_file)
-            build_path = self.get_build_path(slug)
-            if self.needs_build(source_file, build_path):
-                self.build(source_file, build_path)
+        for source_abspath in self.source.get_all_files():
+            fragment = self.source.get_fragment(source_abspath)
+            fragment_abspath = self.source.get_fragment_abspath(source_abspath)
+            self.write_fragment(fragment, fragment_abspath)
         print "Done."
-        
+
+    def write_fragment(self, fragment, fragment_abspath):
+        with self.open_fragment_file(fragment_abspath) as fout:
+            fout.write(fragment.encode('utf-8') + '\n')
+ 
+    def open_fragment_file(self, fragment_abspath):
+        self.make_fragment_folder(fragment_abspath)
+        return open(fragment_abspath, "w")
+
+    def make_fragment_folder(self, fragment_abspath):
+        fragment_dir = os.path.dirname(fragment_abspath)
+        if not os.path.isdir(fragment_folder):
+            os.makedirs(fragment_folder)
+
 
 class Loader(object):
 
@@ -212,13 +222,13 @@ class Loader(object):
         for filename in log:
             status, timestamp = log[filename]
             print status, filename, timestamp
-            #data = self.builder.get_context(filename)
+            #data = self.source.get_data(filename)
             #entry = self.graph.entries.create(data)
             #print entry.eid, entry.map()
           
     def update_all(self):
-        for source_file in self.source.get_all_files():
-            data = self.source.get_data(source_file)
+        for source_abspath in self.source.get_all_files():
+            data = self.source.get_data(source_abspath)
             # TODO: if fragment exists...
             entry = self.graph.entries.save(data)
             print entry.eid, entry.map()

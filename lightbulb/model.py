@@ -44,7 +44,8 @@ class Topic(Node):
     name = String(nullable=False)
 
 
-# Sepcial model for storing metadata        
+# Sepcial model for storing metadata
+# There's a better way, see: https://groups.google.com/d/topic/neo4j/UOxvsFwDw-E/discussion
 class Meta(Node):
     
     element_type = "lightbulb_meta"
