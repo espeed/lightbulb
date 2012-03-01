@@ -45,11 +45,12 @@ class run_audit(Command):
         else:
             print("No problems found in sourcecode.")
 
-def run_tests():
-    import os, sys
-    sys.path.append(os.path.join(os.path.dirname(__file__), 'tests'))
-    from bulbs_tests import suite
-    return suite()
+# Run tests from inside the tests dir
+#def run_tests():
+#    import os, sys
+#    sys.path.append(os.path.join(os.path.dirname(__file__), 'tests'))
+#    from lightbulb_tests import suite
+#    return suite()
 
 setup (
     name = 'lightbulb',
@@ -80,5 +81,5 @@ setup (
         "Topic :: System :: Distributed Computing",
         ],
     cmdclass={'audit': run_audit},
-    test_suite='__main__.run_tests'
+    #test_suite='__main__.run_tests'
 )
