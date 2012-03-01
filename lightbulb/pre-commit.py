@@ -4,6 +4,10 @@
 # Copyright 2012 James Thornton (http://jamesthornton.com)
 # BSD License (see LICENSE for details)
 #
+
+# Git pre-commit hook to generate changelog for updated entries.
+# Used by Heroku app after each push to know what entries to update in Neo4j.
+
 from lightbulb.changelog import ChangeLog
 
 # To have multiple pre-commit hook files, see...

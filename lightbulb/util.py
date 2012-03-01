@@ -11,6 +11,9 @@ from string import Template
 
 from .engine import Config, Writer
 
+#
+# Utils for creating new blog entry source files.
+#
 
 def get_template(template_path):
     fin = open(template_path, "r")

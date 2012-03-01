@@ -17,6 +17,7 @@ SOURCE_EXT = ".rst"
 
 
 class ChangeLog(object):
+    """Blog entry change log. Updated upon Git commits."""
 
     def __init__(self, log_name=None, source_path=None, source_ext=None):
         # TODO: make sure log goes in project dir

@@ -10,6 +10,10 @@ from bulbs.model import Node, NodeProxy, Relationship, build_data
 from bulbs.property import String, Integer, DateTime
 from bulbs.utils import extract, get_file_path
 
+#
+# Bulbs database model for the Neo4j blog engine
+#
+
 cache = Cache("lightbulb")
 
 
@@ -43,14 +47,6 @@ class Topic(Node):
 
     name = String(nullable=False)
 
-
-# Sepcial model for storing metadata
-# There's a better way, see: https://groups.google.com/d/topic/neo4j/UOxvsFwDw-E/discussion
-class Meta(Node):
-    
-    element_type = "lightbulb_meta"
-    
-    last_updated = DateTime()
 
 
 class Entry(Node):
@@ -127,7 +123,6 @@ class Graph(Neo4jGraph):
         self.people = self.build_proxy(Person)
         self.entries = self.build_proxy(Entry)
         self.topics = self.build_proxy(Topic)
-        self.lightbulb = self.build_proxy(Meta)
 
         # Relationship Proxies
         self.tagged = self.build_proxy(Tagged)
