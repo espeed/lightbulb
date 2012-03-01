@@ -6,7 +6,8 @@
 #
 
 # Git pre-commit hook to generate changelog for updated entries.
-# Used by Heroku app after each push to know what entries to update in Neo4j.
+# The changelog is used by Heroku app after each push to know what 
+# entries to update in Neo4j.
 
 from lightbulb.changelog import ChangeLog
 
