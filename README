@@ -20,7 +20,8 @@ will be served off disk.
 
 What do I need?
 
-* Neo4j Server or if your using Heroku, the Neo4j Add On
+* Neo4j Server or if you're using Heroku, the Neo4j Heroku Add On
+* Python 2.7
 
 And these Python modules:
 
