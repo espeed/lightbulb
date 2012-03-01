@@ -19,14 +19,14 @@ class Config(object):
         self.timezone = "America/Chicago"
         #self.current_directory = os.getcwd()
 
-class Source(object):
+class Parser(object):
 
     def __init__(self, config):
         self.config = config
         self.source_dir = "%s/%s" % (config.project_dir, config.source_folder)
         self.writer_name = 'html4css1'
 
-    # Builder
+    # Writer
     def get_fragment(self, source_abspath):
         source = self.get_document_source(source_abspath)
         parts = self.get_document_parts(source) 
@@ -54,14 +54,14 @@ class Source(object):
 
         return data
 
-    # Source
+    # Parser
     def get_document_source(self, source_abspath):
         def_source = self.get_substitution_definitions()
         doc_source = self.read_source_file(source_abspath)
         source = "\n".join([def_source, doc_source])
         return source
                 
-    # Source
+    # Parser
     def get_document_parts(self, source):
         # http://docutils.sourceforge.net/docs/api/publisher.html#publish-parts-details
         settings = dict(initial_header_level=2) # do we need this?
@@ -69,7 +69,7 @@ class Source(object):
         parts = docutils.core.publish_parts(**options)
         return parts
     
-    # Source
+    # Parser
     def get_substitution_definitions(self):
         # Standard substitution definitions
         # http://docutils.sourceforge.net/docs/ref/rst/definitions.html
@@ -79,13 +79,13 @@ class Source(object):
         source = self.read_source_file(source_abspath)
         return source
 
-    # Source
+    # Parser
     def read_source_file(self,source_abspath):
         fin = open(source_abspath, "r")
         source = fin.read().decode('utf-8')
         return source       
 
-    # Source
+    # Parser
     def get_slug(self, source_abspath):
         start = self.get_source_dir()
         #relative_path = file_name.rpartition(source_dir)[-1].lstrip("/") 
@@ -93,7 +93,7 @@ class Source(object):
         slug = os.path.splitext(relative_path)[0]
         return slug
 
-    # Source
+    # Parser
     def get_source_dir(self):
         source_dir = os.path.join(self.config.project_dir, self.config.source_folder)
         return source_dir
@@ -103,7 +103,7 @@ class Source(object):
     #    source_abspath = os.path.join(self.config.project_dir, self.config.source_folder, file_name)
     #    return source_abspath
      
-    # Source
+    # Parser
     def get_source_path(self, source_abspath):
         #source_path = os.path.join(self.config.source_folder, file_name)
         #return source_path
@@ -115,12 +115,12 @@ class Source(object):
     #    fagment_dir = os.path.join(self.config.project_dir, self.config.build_folder)
     #    return fragment_dir
 
-    # Builder
+    # Writer
     def get_fragment_abspath(self, source_abspath):
         fragment_path = self.get_fragment_path(source_abspath)
         return os.path.join(self.config.project_dir, fragment_path)
 
-    # Source
+    # Parser
     def get_fragment_path(self, source_abspath):
         # /project/source/2012/hello.rst => /project/source/2012, hello.rst
         head_dir, basename = os.path.split(source_abspath)
@@ -139,7 +139,7 @@ class Source(object):
 
         
         
-    # Source
+    # Parser
     def _get_metadata(self, source, source_abspath):
         doctree = docutils.core.publish_doctree(source)
         docinfo = doctree.traverse(docutils.nodes.docinfo)
@@ -153,7 +153,7 @@ class Source(object):
             meta[key] = value.astext()
         return meta
 
-    # Source
+    # Parser
     def _process_standard_fields(self,docinfo):
         # Standard fields: date, author, etc.
         meta = {}
@@ -163,7 +163,7 @@ class Source(object):
             meta[key] = value
         return meta
 
-    # Source
+    # Parser
     def _process_custom_fields(self, meta):
         # http://repo.or.cz/w/wrigit.git/blob/f045e5e7766e767c0b56bcb7a1ba0582a6f4f176:/rst.py
         field = meta['field']
@@ -172,7 +172,7 @@ class Source(object):
         del meta['field']
         return meta
         
-    # Builder, Loader
+    # Writer, Loader
     def get_all_files(self):
         source_dir = self.get_source_dir()
         for root, dirs, files in os.walk(source_dir):
@@ -183,15 +183,15 @@ class Source(object):
                     yield source_abspath
 
 
-class Builder(object):
+class Writer(object):
     def __init__(self, config):
         self.config = config
-        self.source = Source(config)
+        self.parser = Parser(config)
 
     def run(self):
-        for source_abspath in self.source.get_all_files():
-            fragment = self.source.get_fragment(source_abspath)
-            fragment_abspath = self.source.get_fragment_abspath(source_abspath)
+        for source_abspath in self.parser.get_all_files():
+            fragment = self.parser.get_fragment(source_abspath)
+            fragment_abspath = self.parser.get_fragment_abspath(source_abspath)
             self.write_fragment(fragment, fragment_abspath)
         print "Done."
 
@@ -215,20 +215,20 @@ class Loader(object):
         self.graph = graph
         self.changelog = changelog
         self.config = config
-        self.source = Source(self.config)
+        self.parser = Parser(self.config)
 
     def save(self):
         log = self.changelog.get()
         for filename in log:
             status, timestamp = log[filename]
             print status, filename, timestamp
-            #data = self.source.get_data(filename)
+            #data = self.parser.get_data(filename)
             #entry = self.graph.entries.create(data)
             #print entry.eid, entry.map()
           
     def update_all(self):
-        for source_abspath in self.source.get_all_files():
-            data = self.source.get_data(source_abspath)
+        for source_abspath in self.parser.get_all_files():
+            data = self.parser.get_data(source_abspath)
             # TODO: if fragment exists...
             entry = self.graph.entries.save(data)
             print entry.eid, entry.map()

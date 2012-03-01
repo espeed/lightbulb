@@ -9,7 +9,7 @@ import unittest
 import docutils
 import docutils.core
 
-from lightbulb import Config, Source, Builder
+from lightbulb import Config, Parser, Writer, Loader
 
 current_dir = os.getcwd()
 project_dir = "%s/project" % current_dir
@@ -41,23 +41,23 @@ class ConfigTestCase(unittest.TestCase):
         assert self.config.project_dir == project_dir
         
 
-class SourceTestCase(unittest.TestCase):
+class ParserTestCase(unittest.TestCase):
 
     def setUp(self):
         self.config = Config(project_dir)
-        self.source = Source(self.config)
+        self.parser = Parser(self.config)
     
     def test_init(self):
-        assert self.source.config == self.config
-        assert self.source.source_dir == source_dir
+        assert self.parser.config == self.config
+        assert self.parser.source_dir == source_dir
         
     def test_get_fragment(self):
-        fragment = self.source.get_fragment(source_abspath)
+        fragment = self.parser.get_fragment(source_abspath)
         excerpt = "connecting things"
         assert excerpt in fragment
         
     def test_get_data(self):
-        data = self.source.get_data(source_abspath)
+        data = self.parser.get_data(source_abspath)
         assert data['title'] == title
         assert data['subtitle'] == subtitle
         assert excerpt in data['fragment'] 
@@ -70,52 +70,52 @@ class SourceTestCase(unittest.TestCase):
         assert  data['source_path'] == source_path
         
     def test_get_document_source(self):
-        source = self.source.get_document_source(source_abspath)
+        source = self.parser.get_document_source(source_abspath)
         assert docid in source
         assert excerpt in source
 
     def test_get_document_parts(self):
-        source = self.source.get_document_source(source_abspath)
-        parts = self.source.get_document_parts(source)
+        source = self.parser.get_document_source(source_abspath)
+        parts = self.parser.get_document_parts(source)
 
         assert parts['title'] == title
         assert parts['subtitle'] == subtitle
         assert excerpt in parts['fragment'] 
                 
     def test_get_substition_defintions(self):
-        source = self.source.get_substitution_definitions()
+        source = self.parser.get_substitution_definitions()
         assert "isopub" in source
         assert "en dash" in source
         assert "em dash" in source
         
     def test_read_source_file(self):
-        source = self.source.read_source_file(source_abspath)
+        source = self.parser.read_source_file(source_abspath)
         assert docid in source
         assert excerpt in source
 
     def test_get_slug(self):
-        slug = self.source.get_slug(source_abspath)
+        slug = self.parser.get_slug(source_abspath)
         assert slug == "lightbulb"
 
     def test_get_source_dir(self):
-        source_dir = self.source.get_source_dir()
+        source_dir = self.parser.get_source_dir()
         assert source_dir == source_dir
         
     def test_get_source_path(self):
-        source_path = self.source.get_source_path(source_abspath)
+        source_path = self.parser.get_source_path(source_abspath)
         assert source_path == "source/lightbulb.rst"
 
     def test_get_fragment_abspath(self):
-        fragment_abspath = self.source.get_fragment_abspath(source_abspath)
+        fragment_abspath = self.parser.get_fragment_abspath(source_abspath)
         assert fragment_abspath == "%s/lightbulb.html" % build_dir
 
     def test_get_fragment_path(self):
-        fragment_path = self.source.get_fragment_path(source_abspath)
+        fragment_path = self.parser.get_fragment_path(source_abspath)
         assert fragment_path == "build/lightbulb.html" 
         
     def test_get_metadata(self):
-        source = self.source.get_document_source(source_abspath)
-        meta = self.source._get_metadata(source, source_abspath)
+        source = self.parser.get_document_source(source_abspath)
+        meta = self.parser._get_metadata(source, source_abspath)
 
         assert  meta['docid'] == docid
         assert  meta['author'] == author
@@ -123,45 +123,45 @@ class SourceTestCase(unittest.TestCase):
         assert  meta['tags'] == tags
 
     def test_process_standard_fields(self):
-        source = self.source.get_document_source(source_abspath)
+        source = self.parser.get_document_source(source_abspath)
         doctree = docutils.core.publish_doctree(source)
         docinfo = doctree.traverse(docutils.nodes.docinfo)
-        meta = self.source._process_standard_fields(docinfo)
+        meta = self.parser._process_standard_fields(docinfo)
 
         assert  meta['author'] == author
         assert  meta['date'] == date
 
     def test_process_custom_fields(self):
-        source = self.source.get_document_source(source_abspath)
+        source = self.parser.get_document_source(source_abspath)
         doctree = docutils.core.publish_doctree(source)
         docinfo = doctree.traverse(docutils.nodes.docinfo)
-        meta = self.source._process_standard_fields(docinfo)
-        meta = self.source._process_custom_fields(meta)
+        meta = self.parser._process_standard_fields(docinfo)
+        meta = self.parser._process_custom_fields(meta)
         
         assert 'docid' in meta.keys()
         assert 'tags' in meta.keys()
 
     def test_get_all_files(self):
-        source_files = list(self.source.get_all_files())
+        source_files = list(self.parser.get_all_files())
         
         assert source_abspath in source_files
         assert another_file in source_files
 
 
-class BuilderTestCase(unittest.TestCase):
+class WriterTestCase(unittest.TestCase):
 
     def setUp(self):
         self.config = Config(project_dir)
-        self.builder = Builder(self.config)
+        self.writer = Writer(self.config)
 
     def test_init(self):
-        assert self.builder.config == self.config
+        assert self.writer.config == self.config
 
     def test_run(self):
         shutil.rmtree(build_dir, True)
         assert not os.path.isdir(build_dir)
 
-        self.builder.run()
+        self.writer.run()
 
         assert os.path.exists(fragment_abspath)
         assert os.path.exists(another_abspath)
@@ -170,10 +170,10 @@ class BuilderTestCase(unittest.TestCase):
         shutil.rmtree(build_dir, True)
         assert not os.path.isdir(build_dir)
 
-        fragment = self.builder.source.get_fragment(source_abspath)
-        fragment_abspath = self.builder.source.get_fragment_abspath(source_abspath)
+        fragment = self.writer.parser.get_fragment(source_abspath)
+        fragment_abspath = self.writer.parser.get_fragment_abspath(source_abspath)
 
-        self.builder.write_fragment(fragment, fragment_abspath)
+        self.writer.write_fragment(fragment, fragment_abspath)
 
         assert os.path.exists(fragment_abspath)
 
@@ -181,19 +181,27 @@ class BuilderTestCase(unittest.TestCase):
         shutil.rmtree(build_dir, True)
         assert not os.path.isdir(build_dir)
 
-        fragment_abspath = self.builder.source.get_fragment_abspath(source_abspath)
+        fragment_abspath = self.writer.parser.get_fragment_abspath(source_abspath)
 
-        self.builder.make_fragment_dir(fragment_abspath)
+        self.writer.make_fragment_dir(fragment_abspath)
 
         fragment_dir = os.path.dirname(fragment_abspath)
         assert os.path.isdir(fragment_dir)
 
 
+class LoaderTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.config = Config(project_dir)
+        self.writer = Writer(self.config)
+
+
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(ConfigTestCase))
-    suite.addTest(unittest.makeSuite(SourceTestCase))
-    suite.addTest(unittest.makeSuite(BuilderTestCase))
+    suite.addTest(unittest.makeSuite(ParserTestCase))
+    suite.addTest(unittest.makeSuite(WriterTestCase))
 
     return suite
 
