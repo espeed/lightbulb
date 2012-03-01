@@ -4,11 +4,12 @@
 # BSD License (see LICENSE for details)
 #
 import os
+import shutil
 import unittest
 import docutils
 import docutils.core
 
-from lightbulb import Config, Source
+from lightbulb import Config, Source, Builder
 
 current_dir = os.getcwd()
 project_dir = "%s/project" % current_dir
@@ -16,6 +17,8 @@ source_dir = "%s/source" % project_dir
 build_dir = "%s/build" % project_dir
 source_abspath = "%s/lightbulb.rst" % source_dir
 another_file = "%s/anotherdir/another-file.rst" % source_dir
+fragment_abspath = "%s/lightbulb.html" % build_dir
+another_abspath = "%s/anotherdir/another-file.html" % build_dir
 
 title = "Lightbulb"
 subtitle = "A Git-powered, Neo4j-backed blog engine for Heroku."
@@ -37,6 +40,7 @@ class ConfigTestCase(unittest.TestCase):
     def test_init(self):
         assert self.config.project_dir == project_dir
         
+
 class SourceTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -144,11 +148,52 @@ class SourceTestCase(unittest.TestCase):
         assert another_file in source_files
 
 
+class BuilderTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.config = Config(project_dir)
+        self.builder = Builder(self.config)
+
+    def test_init(self):
+        assert self.builder.config == self.config
+
+    def test_run(self):
+        shutil.rmtree(build_dir, True)
+        assert not os.path.isdir(build_dir)
+
+        self.builder.run()
+
+        assert os.path.exists(fragment_abspath)
+        assert os.path.exists(another_abspath)
+
+    def test_write_fragment(self):
+        shutil.rmtree(build_dir, True)
+        assert not os.path.isdir(build_dir)
+
+        fragment = self.builder.source.get_fragment(source_abspath)
+        fragment_abspath = self.builder.source.get_fragment_abspath(source_abspath)
+
+        self.builder.write_fragment(fragment, fragment_abspath)
+
+        assert os.path.exists(fragment_abspath)
+
+    def test_make_fragment_dir(self):
+        shutil.rmtree(build_dir, True)
+        assert not os.path.isdir(build_dir)
+
+        fragment_abspath = self.builder.source.get_fragment_abspath(source_abspath)
+
+        self.builder.make_fragment_dir(fragment_abspath)
+
+        fragment_dir = os.path.dirname(fragment_abspath)
+        assert os.path.isdir(fragment_dir)
+
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(ConfigTestCase))
     suite.addTest(unittest.makeSuite(SourceTestCase))
-
+    suite.addTest(unittest.makeSuite(BuilderTestCase))
 
     return suite
 

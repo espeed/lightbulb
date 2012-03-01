@@ -200,13 +200,13 @@ class Builder(object):
             fout.write(fragment.encode('utf-8') + '\n')
  
     def open_fragment_file(self, fragment_abspath):
-        self.make_fragment_folder(fragment_abspath)
+        self.make_fragment_dir(fragment_abspath)
         return open(fragment_abspath, "w")
 
-    def make_fragment_folder(self, fragment_abspath):
+    def make_fragment_dir(self, fragment_abspath):
         fragment_dir = os.path.dirname(fragment_abspath)
-        if not os.path.isdir(fragment_folder):
-            os.makedirs(fragment_folder)
+        if not os.path.isdir(fragment_dir):
+            os.makedirs(fragment_dir)
 
 
 class Loader(object):
