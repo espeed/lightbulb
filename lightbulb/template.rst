@@ -1,10 +1,10 @@
 ==============================================
-{title}
+title
 ==============================================
-{subtitle}
+subtitle
 =======================================================================
-:docid: {docid}
-:author: {author}
-:date: {date}
-:tags: {tags}
+:docid: $docid
+:author: $author
+:date: $date
+:tags:
 

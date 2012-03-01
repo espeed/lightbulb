@@ -17,14 +17,11 @@ def get_template(template_path):
     text = fin.read().decode('utf-8')  # source_text
     return Template(text)
 
-def create_new_file():
+def create_new_file(source_file, author):
 
     # TODO: parse out docid, maybe sign docid
 
-    filename = "another-test.rst"    
-
     docid = uuid.uuid4().hex
-    author = "james"
     date = datetime.datetime.now().strftime("%Y-%m-%d")
 
     params = dict(docid=docid, author=author, date=date)
@@ -33,35 +30,11 @@ def create_new_file():
     template = get_template(template_path)
     content = template.substitute(params)
 
-    source_path = "source/%s" % filename
+    source_path = "source/%s" % source_file
     fout = open(source_path, "w")
     fout.writelines(content)
 
     fout.close()
-
-
-def main():
-    if len(sys.argv) not in (1, 2, 3):
-        print >> sys.stderr, 'usage: lightbulb <action> <folder>'
-
-    if len(sys.argv) >= 2:
-        action = sys.argv[1]
-    else:
-        action = 'build'
-
-    if len(sys.argv) >= 3:
-        folder = sys.argv[2]
-    else:
-        folder = os.getcwd()
-
-    if action not in ('build', 'serve'):
-        print >> sys.stderr, 'unknown action', action
-
-    
-    config = Config(folder)
-    writer = Writer(config)
-
-    writer.write()
 
 
 
