@@ -9,7 +9,7 @@ import uuid
 import datetime
 from string import Template
 
-from .engine import Config, Builder
+from .engine import Config, Writer
 
 
 def get_template(template_path):
@@ -59,9 +59,9 @@ def main():
 
     
     config = Config(folder)
-    builder = Builder(config)
+    writer = Writer(config)
 
-    builder.run()
+    writer.write()
 
 
 

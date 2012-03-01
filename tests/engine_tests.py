@@ -246,6 +246,9 @@ class LoaderTestCase(unittest.TestCase):
         self.changelog._execute("git init")
         self.changelog._execute("touch changelog.pickle")
         self.changelog._execute("git add .")
+        
+        self.changelog.update()
+
         self.changelog._execute("git commit -m test commit")
 
         # Changes need to be made
@@ -270,6 +273,9 @@ class LoaderTestCase(unittest.TestCase):
         self.changelog._execute("git init")
         self.changelog._execute("touch changelog.pickle")
         self.changelog._execute("git add .")
+
+        self.changelog.update()
+
         self.changelog._execute("git commit -m test commit")
 
         time.sleep(2)

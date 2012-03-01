@@ -100,7 +100,10 @@ class Parser(object):
 
     # Loader
     def get_source_abspath(self, file_name):
-        source_abspath = os.path.join(self.config.project_dir, file_name)
+        # This is coming from changelog as blog/source/test.rst
+        # so the start dir needs to be the git repo's dir, not project_dir
+        current_dir = os.getcwd()  
+        source_abspath = os.path.join(current_dir, file_name)
         return source_abspath
      
     # Parser
@@ -122,19 +125,22 @@ class Parser(object):
 
     # Parser
     def get_fragment_path(self, source_abspath):
+        # TODO: more test patterns
+
         # /project/source/2012/hello.rst => /project/source/2012, hello.rst
         head_dir, basename = os.path.split(source_abspath)
 
         # /project/source/2012 => 2012 
-        start = self.get_source_dir()
-        fragment_folder = os.path.relpath(head_dir, start)
+        #start = self.get_source_dir()
+        #fragment_folder = os.path.relpath(head_dir, start)
 
         # hello.rst ==> hello
         stub = os.path.splitext(basename)[0]  # remove the ext
         filename = "%s.html" % stub        
 
         # ==> build/2012/hello.html
-        fragment_path = os.path.join(self.config.build_folder, fragment_folder, filename)
+        #fragment_path = os.path.join(self.config.build_folder, fragment_folder, filename)
+        fragment_path = os.path.join(self.config.build_folder, filename)
         return os.path.normpath(fragment_path)
 
         
@@ -224,7 +230,7 @@ class Loader(object):
     def update_changed(self):
         update_count = 0
 
-        data = self.changelog.update()
+        data = self.changelog.get()
 
         if data is None:
             return update_count
@@ -253,6 +259,8 @@ class Loader(object):
             # TODO: remove entry if fragment doesn't exist
             entry = self.graph.entries.save(data)
             return True
+        else:
+            print "WARNING: Fragment Not Found", fragment_abspath
         return False
           
     def set_last_updated(self, last_updated):
