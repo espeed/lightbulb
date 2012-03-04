@@ -9,25 +9,18 @@ from collections import OrderedDict
 
 from lightbulb import Config, Path, ChangeLog
 
-# Defaults
-LOG_NAME = "changelog.pickle"
-SOURCE_PATH = "source/"
-SOURCE_EXT = ".rst"
-
 module_abspath = os.path.abspath(__file__)
 working_dir = os.path.dirname(module_abspath)
-repo_dir = os.path.join(working_dir, ".git") 
 
 config = Config(working_dir)
 path = Path(config)
+
+repo_dir = path.get_repo_dir()
 changelog_abspath = path.get_changelog_abspath()
 
 class ChangeLogTestCase(unittest.TestCase):
 
     def setUp(self):
-        os.putenv("GIT_DIR", path.get_repo_dir())
-        os.putenv("GIT_WORK_TREE", path.get_working_dir()) 
-
         # Make sure we're not going to clobber someone's existing repo
         assert not os.path.isdir(repo_dir)
         assert not os.path.exists(changelog_abspath)

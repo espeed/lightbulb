@@ -12,11 +12,8 @@ import docutils.core
 
 from lightbulb import Config, Path, Parser, Writer, Loader, ChangeLog, Graph, cache
 
-
-
 module_abspath = os.path.abspath(__file__)
 working_dir = os.path.dirname(module_abspath)
-repo_dir = os.path.join(working_dir, ".git") 
 
 project_dir = "%s/blog" % working_dir
 source_dir = "%s/source" % project_dir
@@ -43,7 +40,7 @@ source_path = "source/lightbulb.rst"
 config = Config(working_dir)
 path = Path(config)
 changelog_abspath = path.get_changelog_abspath()
-
+repo_dir = path.get_repo_dir()
 
 class ParserTestCase(unittest.TestCase):
 
