@@ -5,7 +5,7 @@ from engine_tests import suite as engine_suite
 
 
 def suite():
-    # This requires Neo4j Server and Rexster are running.
+    # This requires Neo4j Server is running
     
     suite = unittest.TestSuite()
 

@@ -10,20 +10,14 @@ import pickle
 from subprocess import Popen, PIPE
 from collections import OrderedDict
 
-# Defaults
-LOG_NAME = "changelog.pickle"
-SOURCE_PATH = "source/"
-SOURCE_EXT = ".rst"
-
+from config import Path
 
 class ChangeLog(object):
     """Blog entry change log. Updated upon Git commits."""
 
-    def __init__(self, log_name=None, source_path=None, source_ext=None):
-        # TODO: make sure log goes in project dir
-        self.log_name = log_name = LOG_NAME
-        self.source_path = source_path or SOURCE_PATH
-        self.source_ext = source_ext or SOURCE_EXT
+    def __init__(self, config):
+        self.config = config
+        self.path = Path(config)
 
     def get(self):
         try:
@@ -45,10 +39,11 @@ class ChangeLog(object):
         data = self._write(data, diff)
         self._display(data)
         return data
-    
+
     def exists(self):
         # Don't create a changelog unless file exists
-        if not os.path.isfile(self.log_name):
+        changelog_abspath = self.path.get_changelog_abspath()
+        if not os.path.isfile(changelog_abspath):
             print "CHANGELOG NOT FOUND - WILL ADD/UPDATE ALL ENTRIES IN DATABASE ON PUSH"
             # Remove the old changelog from git so it doesn't persist on the server
             self._remove_changelog()
@@ -56,15 +51,20 @@ class ChangeLog(object):
         return True
 
     def _read(self):
-        with open(self.log_name, "r") as fin:
+        changelog_abspath = self.path.get_changelog_abspath()
+        with open(changelog_abspath, "r") as fin:
             # changelog data is an OrderedDict
             data = pickle.load(fin)   
             #items = sorted(files.items(), key=itemgetter(1,1))
         return data
         
     def _write(self, data, diff):
+        source_dir = self.path.get_source_dir()
+        start = self.path.get_working_dir()
+        source_folder = os.path.relpath(source_dir, start)
         for status, filename in self._split_diff(diff):
-            if re.search(self.source_path, filename) and filename.endswith(self.source_ext):
+            # filter out files that don't include the source_dir
+            if re.search(source_folder, filename) and filename.endswith(self.config.source_ext):
                 # Git diff is NOT sorted by modified time.
                 # We need it ordered by time so use timestamp instead
                 timestamp = self._current_timestamp()
@@ -73,7 +73,8 @@ class ChangeLog(object):
                 data[filename] = (status, timestamp)
                     
         # not using JSON because we want to maintain order in the dict
-        with open(self.log_name, "w") as fout:
+        changelog_abspath = self.path.get_changelog_abspath()
+        with open(changelog_abspath, "w") as fout:
             pickle.dump(data, fout)
 
         # Add the changelog to git now that it has been updated.
@@ -98,21 +99,26 @@ class ChangeLog(object):
     def _get_diff(self):
         # git diff is NOT sorted by modified time
         #command = "git diff --cached --name-only"
-        command = "git diff --cached --name-status"
+        repo_dir = self.path.get_repo_dir()
+        working_dir = self.path.get_working_dir()
+        command = "git  diff --cached --name-status"
         return self._execute(command)
 
     def _add_changelog(self):
         # Add the changelog to git after it has been updated.
-        command = "git add %s" % self.log_name
+        command = "git add %s" % self.path.get_changelog_abspath()
         self._execute(command)
 
     def _remove_changelog(self):
         # Doing this so the old changelog doesn't persist on the server
-        command = "git rm %s" % self.log_name
+        command = "git rm %s" % self.path.get_changelog_abspath()
         print self._execute(command)
         
     def _execute(self, command):
         # TODO: Will Popen work with Heroku single-process instances? It looks like it does.
+        # Setting Git env vars to ensure proper paths when running outside or working dir
+        os.putenv("GIT_DIR", self.path.get_repo_dir())
+        os.putenv("GIT_WORK_TREE", self.path.get_working_dir()) 
         pipe = Popen(command, shell=True, cwd=".", stdout=PIPE, stderr=PIPE )
         (out, error) = pipe.communicate()
         pipe.wait()

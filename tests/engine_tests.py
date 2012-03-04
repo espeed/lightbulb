@@ -10,11 +10,18 @@ import unittest
 import docutils
 import docutils.core
 
-from lightbulb import Config, Parser, Writer, Loader, ChangeLog, Graph, cache
+from lightbulb import Config, Path, Parser, Writer, Loader, ChangeLog, Graph, cache
 
-project_dir = os.getcwd()
+
+
+module_abspath = os.path.abspath(__file__)
+working_dir = os.path.dirname(module_abspath)
+repo_dir = os.path.join(working_dir, ".git") 
+
+project_dir = "%s/blog" % working_dir
 source_dir = "%s/source" % project_dir
 build_dir = "%s/build" % project_dir
+
 source_abspath = "%s/lightbulb.rst" % source_dir
 another_file = "%s/another-file.rst" % source_dir
 fragment_abspath = "%s/lightbulb.html" % build_dir
@@ -28,28 +35,26 @@ author = "james"
 date = "2012-02-29"
 tags = "neo4j, python, bulbs, heroku"
 slug = "lightbulb"
+
+# relative from project folder
 fragment_path = "build/%s.html" % slug
 source_path = "source/lightbulb.rst"
 
+config = Config(working_dir)
+path = Path(config)
+changelog_abspath = path.get_changelog_abspath()
 
-class ConfigTestCase(unittest.TestCase):
-
-    def setUp(self):
-        self.config = Config(project_dir)
-        
-    def test_init(self):
-        assert self.config.project_dir == project_dir
-        
 
 class ParserTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.config = Config(project_dir)
+        self.config = Config(working_dir)
+        self.path = Path(self.config)
         self.parser = Parser(self.config)
     
     def test_init(self):
         assert self.parser.config == self.config
-        assert self.parser.source_dir == source_dir
+        #assert self.parser.source_dir == source_dir
         
     def test_get_fragment(self):
         fragment = self.parser.get_fragment(source_abspath)
@@ -98,19 +103,19 @@ class ParserTestCase(unittest.TestCase):
         assert slug == "lightbulb"
 
     def test_get_source_dir(self):
-        source_dir = self.parser.get_source_dir()
+        source_dir = self.path.get_source_dir()
         assert source_dir == source_dir
         
     def test_get_source_path(self):
-        source_path = self.parser.get_source_path(source_abspath)
+        source_path = self.path.get_source_path(source_abspath)
         assert source_path == "source/lightbulb.rst"
 
     def test_get_fragment_abspath(self):
-        fragment_abspath = self.parser.get_fragment_abspath(source_abspath)
+        fragment_abspath = self.path.get_fragment_abspath(source_abspath)
         assert fragment_abspath == "%s/lightbulb.html" % build_dir
 
     def test_get_fragment_path(self):
-        fragment_path = self.parser.get_fragment_path(source_abspath)
+        fragment_path = self.path.get_fragment_path(source_abspath)
         assert fragment_path == "build/lightbulb.html" 
         
     def test_get_metadata(self):
@@ -151,11 +156,11 @@ class ParserTestCase(unittest.TestCase):
 class WriterTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.config = Config(project_dir)
+        self.config = Config(working_dir)
         self.writer = Writer(self.config)
 
-    def test_init(self):
-        assert self.writer.config == self.config
+    #def test_init(self):
+        #assert self.writer.config == self.config
 
     def test_run(self):
         shutil.rmtree(build_dir, True)
@@ -171,7 +176,7 @@ class WriterTestCase(unittest.TestCase):
         assert not os.path.isdir(build_dir)
 
         fragment = self.writer.parser.get_fragment(source_abspath)
-        fragment_abspath = self.writer.parser.get_fragment_abspath(source_abspath)
+        fragment_abspath = self.writer.path.get_fragment_abspath(source_abspath)
 
         self.writer.write_fragment(fragment, fragment_abspath)
 
@@ -179,7 +184,7 @@ class WriterTestCase(unittest.TestCase):
 
         # Do it again so both fragments will exist for loader test
         another_fragment = self.writer.parser.get_fragment(another_file)
-        another_fragment_abspath = self.writer.parser.get_fragment_abspath(another_file)
+        another_fragment_abspath = self.writer.path.get_fragment_abspath(another_file)
 
         self.writer.write_fragment(another_fragment, another_fragment_abspath)
 
@@ -190,7 +195,7 @@ class WriterTestCase(unittest.TestCase):
         shutil.rmtree(build_dir, True)
         assert not os.path.isdir(build_dir)
 
-        fragment_abspath = self.writer.parser.get_fragment_abspath(source_abspath)
+        fragment_abspath = self.writer.path.get_fragment_abspath(source_abspath)
 
         self.writer.make_fragment_dir(fragment_abspath)
 
@@ -202,8 +207,8 @@ class LoaderTestCase(unittest.TestCase):
 
     def setUp(self):
         self.graph = Graph()
-        self.changelog = ChangeLog()
-        self.config = Config(project_dir)
+        self.config = Config(working_dir)
+        self.changelog = ChangeLog(self.config)
         self.loader = Loader(self.graph, self.changelog, self.config)
         
         data = dict(username="james", name="James Thornton")
@@ -230,13 +235,13 @@ class LoaderTestCase(unittest.TestCase):
 
     def test_update_changed(self):
         # TMP: Remove test repo and changelog
-        self.changelog._execute("rm -rf .git")
-        self.changelog._execute("rm changelog.pickle")
+        self.changelog._execute("rm -rf %s" % repo_dir)
+        self.changelog._execute("rm %s" % changelog_abspath)
 
 
         # Make sure we're not going to clobber someone's existing repo
-        assert not os.path.isdir(".git")
-        assert not os.path.exists("changelog.pickle")
+        assert not os.path.isdir(repo_dir)
+        assert not os.path.exists(changelog_abspath)
 
         now = int(time.time())
         self.loader.set_last_updated(now)
@@ -244,7 +249,7 @@ class LoaderTestCase(unittest.TestCase):
         
         # Create test repo and changelog
         self.changelog._execute("git init")
-        self.changelog._execute("touch changelog.pickle")
+        self.changelog._execute("touch %s" % changelog_abspath)
         self.changelog._execute("git add .")
         
         self.changelog.update()
@@ -256,22 +261,22 @@ class LoaderTestCase(unittest.TestCase):
         assert update_count == 2
 
         # Remove test repo and changelog
-        self.changelog._execute("rm -rf .git")
-        self.changelog._execute("rm changelog.pickle")
+        self.changelog._execute("rm -rf %s" % repo_dir)
+        self.changelog._execute("rm %s" % changelog_abspath)
 
 
     def test_no_update(self):
         # TMP: Remove test repo and changelog
-        self.changelog._execute("rm -rf .git")
-        self.changelog._execute("rm changelog.pickle")
+        self.changelog._execute("rm -rf %s" % repo_dir)
+        self.changelog._execute("rm %s" % changelog_abspath)
 
         # Make sure we're not going to clobber someone's existing repo
-        assert not os.path.isdir(".git")
-        assert not os.path.exists("changelog.pickle")
+        assert not os.path.isdir(repo_dir)
+        assert not os.path.exists(changelog_abspath)
 
         # Create test repo and changelog
         self.changelog._execute("git init")
-        self.changelog._execute("touch changelog.pickle")
+        self.changelog._execute("touch %s" % changelog_abspath)
         self.changelog._execute("git add .")
 
         self.changelog.update()
@@ -287,8 +292,8 @@ class LoaderTestCase(unittest.TestCase):
         assert update_count == 0
 
         # Remove test repo and changelog
-        self.changelog._execute("rm -rf .git")
-        self.changelog._execute("rm changelog.pickle")
+        self.changelog._execute("rm -rf %s" % repo_dir)
+        self.changelog._execute("rm %s" % changelog_abspath)
 
     def test_set_and_get_last_updated(self):
         self.loader.set_last_updated(self.last_updated)
@@ -296,10 +301,9 @@ class LoaderTestCase(unittest.TestCase):
 
         assert last_updated == self.last_updated
 
-
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(ConfigTestCase))
+    #suite.addTest(unittest.makeSuite(ConfigTestCase))
     suite.addTest(unittest.makeSuite(ParserTestCase))
     suite.addTest(unittest.makeSuite(WriterTestCase))
     suite.addTest(unittest.makeSuite(LoaderTestCase))

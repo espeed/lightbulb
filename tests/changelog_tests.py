@@ -3,33 +3,42 @@
 # Copyright 2012 James Thornton (http://jamesthornton.com)
 # BSD License (see LICENSE for details)
 #
-
 import os
 import unittest
 from collections import OrderedDict
 
-from lightbulb import ChangeLog
+from lightbulb import Config, Path, ChangeLog
 
 # Defaults
 LOG_NAME = "changelog.pickle"
 SOURCE_PATH = "source/"
 SOURCE_EXT = ".rst"
 
+module_abspath = os.path.abspath(__file__)
+working_dir = os.path.dirname(module_abspath)
+repo_dir = os.path.join(working_dir, ".git") 
+
+config = Config(working_dir)
+path = Path(config)
+changelog_abspath = path.get_changelog_abspath()
 
 class ChangeLogTestCase(unittest.TestCase):
 
     def setUp(self):
-        # Make sure we're not going to clobber someone's existing repo
-        assert not os.path.isdir(".git")
-        assert not os.path.exists("changelog.pickle")
+        os.putenv("GIT_DIR", path.get_repo_dir())
+        os.putenv("GIT_WORK_TREE", path.get_working_dir()) 
 
-        self.changelog = ChangeLog()
+        # Make sure we're not going to clobber someone's existing repo
+        assert not os.path.isdir(repo_dir)
+        assert not os.path.exists(changelog_abspath)
+        
+        # Specifying working dir so we don't clobber an actual repo
+        self.changelog = ChangeLog(config)
         self.changelog._execute("git init")
         
     def test_init(self):
-        assert self.changelog.log_name == LOG_NAME
-        assert self.changelog.source_path == SOURCE_PATH
-        assert self.changelog.source_ext == SOURCE_EXT
+        path = "%s/changelog.pickle" % working_dir
+        assert self.changelog.path.get_changelog_abspath() == path
 
     def test_get(self):
         data = self.changelog.get()
@@ -40,8 +49,8 @@ class ChangeLogTestCase(unittest.TestCase):
     def test_update(self):
         data = self.changelog.update()
         assert data is None
-
-        self.changelog._execute("touch changelog.pickle")
+        
+        self.changelog._execute("touch %s" % changelog_abspath)
         self.changelog._execute("git add .")
         self.changelog._execute("git commit -m test commit")
         
@@ -54,18 +63,18 @@ class ChangeLogTestCase(unittest.TestCase):
         assert dataA == dataB
         assert len(dataB) > 1
         
-        status, timestamp = dataB['source/lightbulb.rst']
+        status, timestamp = dataB['blog/source/lightbulb.rst']
         assert status == 'A'
         assert type(timestamp) == int
 
-        status, timestamp = dataB['source/another-file.rst']
+        status, timestamp = dataB['blog/source/another-file.rst']
         assert status == 'A'
         assert type(timestamp) == int
 
     def tearDown(self):
         # Remove the repo we created in setUp
-        self.changelog._execute("rm -rf .git")
-        self.changelog._execute("rm changelog.pickle")
+        self.changelog._execute("rm -rf %s" % repo_dir)
+        self.changelog._execute("rm %s" % changelog_abspath)
 
 def suite():
     suite = unittest.TestSuite()

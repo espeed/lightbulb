@@ -9,22 +9,21 @@ import docutils.core
 from datetime import datetime
 from fnmatch import fnmatch
 
+from config import Path
 
-class Config(object):
-    """Blog engine configuration."""
-    
-    def __init__(self, project_dir=None):
-        self.project_dir = project_dir or os.getcwd()
-        self.source_folder = "source"
-        self.build_folder = "build"
+# Use Git's low-level plumbing commands for scripting, not the high-level porcelain commands
+# See http://schacon.github.com/git/git.html
+# http://stackoverflow.com/questions/2657935/checking-for-a-dirty-index-or-untracked-files-with-git
+
+# Unless --cached is given, work tree is needed
 
 class Parser(object):
     """Parse ReStructuredText source files."""
 
     def __init__(self, config):
         self.config = config
-        self.source_dir = "%s/%s" % (config.project_dir, config.source_folder)
-        self.writer_name = 'html4css1'
+        self.path = Path(config)
+        #self.source_dir = "%s/%s" % (config.project_dir, config.source_folder)
 
     def get_fragment(self, source_abspath):
         source = self.get_document_source(source_abspath)
@@ -47,8 +46,8 @@ class Parser(object):
         # Derived parts: slug, fragment_path, source_path 
         slug = self.get_slug(source_abspath)
         data['slug'] = slug
-        data['fragment_path'] = self.get_fragment_path(source_abspath)
-        data['source_path'] = self.get_source_path(source_abspath)
+        data['fragment_path'] = self.path.get_fragment_path(source_abspath)
+        data['source_path'] = self.path.get_source_path(source_abspath)
 
         return data
 
@@ -60,76 +59,31 @@ class Parser(object):
                 
     def get_document_parts(self, source):
         # http://docutils.sourceforge.net/docs/api/publisher.html#publish-parts-details
+        writer_name = self.config.writer_name
         settings = dict(initial_header_level=2) # do we need this?
-        options = dict(source=source, writer_name=self.writer_name, settings_overrides=settings)
+        options = dict(source=source, writer_name=writer_name, settings_overrides=settings)
         parts = docutils.core.publish_parts(**options)
         return parts
     
     def get_substitution_definitions(self):
         # Standard substitution definitions
         # http://docutils.sourceforge.net/docs/ref/rst/definitions.html
-        target_filename = "substitutions.rst"
-        current_dir = os.path.dirname(__file__)
-        source_abspath = os.path.normpath(os.path.join(current_dir, target_filename))
-        source = self.read_source_file(source_abspath)
+        module_abspath = os.path.abspath(__file__)
+        module_dir = os.path.dirname(module_abspath)
+        source = self.read_source_file("%s/substitutions.rst" % module_dir)
         return source
 
-    def read_source_file(self,source_abspath):
-        fin = open(source_abspath, "r")
+    def read_source_file(self, file_path):
+        fin = open(file_path, "r")
         source = fin.read().decode('utf-8')
         return source       
 
     def get_slug(self, source_abspath):
-        start = self.get_source_dir()
+        start = self.path.get_source_dir()
         #relative_path = file_name.rpartition(source_dir)[-1].lstrip("/") 
         relative_path = os.path.relpath(source_abspath, start)
         slug = os.path.splitext(relative_path)[0]
         return slug
-
-    def get_source_dir(self):
-        source_dir = os.path.join(self.config.project_dir, self.config.source_folder)
-        return source_dir
-
-    def get_source_abspath(self, file_name):
-        # This is coming from changelog as blog/source/test.rst
-        # so the start dir needs to be the git repo's dir, not project_dir
-        current_dir = os.getcwd()  
-        source_abspath = os.path.join(current_dir, file_name)
-        return source_abspath
-     
-    def get_source_path(self, source_abspath):
-        #source_path = os.path.join(self.config.source_folder, file_name)
-        #return source_path
-        start = self.config.project_dir
-        source_path = os.path.relpath(source_abspath, start)
-        return source_path
-
-    #def get_fragment_dir(self)
-    #    fagment_dir = os.path.join(self.config.project_dir, self.config.build_folder)
-    #    return fragment_dir
-
-    def get_fragment_abspath(self, source_abspath):
-        fragment_path = self.get_fragment_path(source_abspath)
-        return os.path.join(self.config.project_dir, fragment_path)
-
-    def get_fragment_path(self, source_abspath):
-        # TODO: more test patterns
-
-        # /project/source/2012/hello.rst => /project/source/2012, hello.rst
-        head_dir, basename = os.path.split(source_abspath)
-
-        # /project/source/2012 => 2012 
-        #start = self.get_source_dir()
-        #fragment_folder = os.path.relpath(head_dir, start)
-
-        # hello.rst ==> hello
-        stub = os.path.splitext(basename)[0]  # remove the ext
-        filename = "%s.html" % stub        
-
-        # ==> build/2012/hello.html
-        #fragment_path = os.path.join(self.config.build_folder, fragment_folder, filename)
-        fragment_path = os.path.join(self.config.build_folder, filename)
-        return os.path.normpath(fragment_path)
 
     def _get_metadata(self, source, source_abspath):
         doctree = docutils.core.publish_doctree(source)
@@ -162,7 +116,7 @@ class Parser(object):
         return meta
         
     def get_all_files(self):
-        source_dir = self.get_source_dir()
+        source_dir = self.path.get_source_dir()
         for root, dirs, files in os.walk(source_dir):
             for filename in files:
                 # Ignore pattern: emacs autosave files. TODO: generalize this
@@ -175,13 +129,14 @@ class Writer(object):
     """Write HTML fragments generated by docutils parser."""
 
     def __init__(self, config):
-        self.config = config
+        #self.config = config
+        self.path = Path(config)
         self.parser = Parser(config)
 
     def run(self):
         for source_abspath in self.parser.get_all_files():
             fragment = self.parser.get_fragment(source_abspath)
-            fragment_abspath = self.parser.get_fragment_abspath(source_abspath)
+            fragment_abspath = self.path.get_fragment_abspath(source_abspath)
             self.write_fragment(fragment, fragment_abspath)
         print "Done."
 
@@ -205,8 +160,8 @@ class Loader(object):
     def __init__(self, graph, changelog, config):
         self.graph = graph
         self.changelog = changelog
-        self.config = config
-        self.parser = Parser(self.config)
+        self.parser = Parser(config)
+        self.path = Path(config)
 
     def update_all(self):
         for source_abspath in self.parser.get_all_files():
@@ -227,7 +182,7 @@ class Loader(object):
             status, timestamp = data[source_path]
             if self.already_updated(timestamp, last_updated):
                 break
-            source_abspath = self.parser.get_source_abspath(source_path)
+            source_abspath = self.path.get_source_abspath(source_path)
             update_count += self.update_entry(source_abspath)
 
         return update_count
@@ -239,15 +194,14 @@ class Loader(object):
         
     def update_entry(self, source_abspath):
         data = self.parser.get_data(source_abspath)
-        fragment_abspath = self.parser.get_fragment_abspath(source_abspath)
-        if os.path.exists(fragment_abspath):
-            # TODO: remove entry if fragment doesn't exist
-            entry = self.graph.entries.save(data)
-            return True
-        else:
+        fragment_abspath = self.path.get_fragment_abspath(source_abspath)
+        if os.path.exists(fragment_abspath) is False:
             print "WARNING: Fragment Not Found", fragment_abspath
-        return False
-          
+            return False
+        # TODO: remove entry if fragment doesn't exist
+        entry = self.graph.entries.save(data)
+        return True
+
     def set_last_updated(self, last_updated):
         # Metadata methods are Neo4j-only right now
         self.graph.set_metadata("entries:last_updated", last_updated)
