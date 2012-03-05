@@ -241,7 +241,7 @@ class Lightbulb(object):
         self.loader.update_all_entries()
 
     def update_changed_entries(self):
-        self.loader.update_all_entries()
+        self.loader.update_changed_entries()
 
     def changelog_exists(self):
         self.loader.changelog_exists()
