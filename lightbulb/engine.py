@@ -164,6 +164,9 @@ class Loader(object):
         self.path = Path(config)
         self.graph = graph
 
+    def changelog_exists(self):
+        return self.changelog.exists()
+
     def update_entries(self):
         if self.changelog_exists():
             print "UPDATING CHANGED"
@@ -171,9 +174,6 @@ class Loader(object):
         else:
             print "UPDATING ALL"
             self.update_all_entries()
-
-    def changelog_exists(self):
-        return self.changelog.exists()
 
     def update_all_entries(self):
         for source_abspath in self.parser.get_all_files():
@@ -198,7 +198,7 @@ class Loader(object):
             update_count += self.update_entry(source_abspath)
 
         return update_count
-        
+
     def old_timestamp(self, timestamp, last_updated):
         # Timestamps with a time before the last_updated time 
         # were updated during the previous push
@@ -225,3 +225,23 @@ class Loader(object):
         return last_updated
         
 
+class Lightbulb(object):
+
+    def __init__(self, config, graph):
+        self.writer = Writer(config)
+        self.loader = Loader(config, graph)
+
+    def build(self):
+        self.writer.run()
+
+    def update_entries(self):
+        self.loader.update_entries()
+
+    def update_all_entries(self):
+        self.loader.update_all_entries()
+
+    def update_changed_entries(self):
+        self.loader.update_all_entries()
+
+    def changelog_exists(self):
+        self.loader.changelog_exists()
