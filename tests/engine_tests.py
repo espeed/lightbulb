@@ -17,7 +17,7 @@ working_dir = os.path.dirname(module_abspath)
 
 project_dir = "%s/blog" % working_dir
 source_dir = "%s/source" % project_dir
-build_dir = "%s/build" % project_dir
+build_dir = "%s/templates/fragment" % project_dir
 
 source_abspath = "%s/lightbulb.rst" % source_dir
 another_file = "%s/another-file.rst" % source_dir
@@ -34,8 +34,8 @@ tags = "neo4j, python, bulbs, heroku"
 slug = "lightbulb"
 
 # relative from project folder
-fragment_path = "build/%s.html" % slug
-source_path = "source/lightbulb.rst"
+fragment_path = "lightbulb.html"
+source_path = "lightbulb.rst"
 
 config = Config(working_dir)
 path = Path(config)
@@ -105,7 +105,7 @@ class ParserTestCase(unittest.TestCase):
         
     def test_get_source_path(self):
         source_path = self.path.get_source_path(source_abspath)
-        assert source_path == "source/lightbulb.rst"
+        assert source_path == "lightbulb.rst"
 
     def test_get_fragment_abspath(self):
         fragment_abspath = self.path.get_fragment_abspath(source_abspath)
@@ -113,7 +113,7 @@ class ParserTestCase(unittest.TestCase):
 
     def test_get_fragment_path(self):
         fragment_path = self.path.get_fragment_path(source_abspath)
-        assert fragment_path == "build/lightbulb.html" 
+        assert fragment_path == "lightbulb.html" 
         
     def test_get_metadata(self):
         source = self.parser.get_document_source(source_abspath)
@@ -205,8 +205,8 @@ class LoaderTestCase(unittest.TestCase):
     def setUp(self):
         self.graph = Graph()
         self.config = Config(working_dir)
-        self.changelog = ChangeLog(self.config)
-        self.loader = Loader(self.graph, self.changelog, self.config)
+        self.loader = Loader(self.config, self.graph)
+        self.changelog = self.loader.changelog
         
         data = dict(username="james", name="James Thornton")
         james = self.graph.people.get_or_create("username", "james", data)
@@ -218,8 +218,8 @@ class LoaderTestCase(unittest.TestCase):
         eid = cache.get('username:james')
         assert type(eid) == int
 
-    def test_update_all(self):
-        self.loader.update_all()
+    def test_update_all_entries(self):
+        self.loader.update_all_entries()
 
         entry1 = self.graph.entries.index.lookup(slug="lightbulb").next()
         assert entry1.title == title
@@ -230,16 +230,12 @@ class LoaderTestCase(unittest.TestCase):
         assert entry2.title == "Another Title"
         assert entry2.subtitle == "Another subtitle here."
 
-    def test_update_changed(self):
-        # TMP: Remove test repo and changelog
-        self.changelog._execute("rm -rf %s" % repo_dir)
-        self.changelog._execute("rm %s" % changelog_abspath)
-
-
+    def test_update_changed_entries(self):
         # Make sure we're not going to clobber someone's existing repo
         assert not os.path.isdir(repo_dir)
         assert not os.path.exists(changelog_abspath)
 
+        # Set last updated time before changelog update to simulate a new changelog
         now = int(time.time())
         self.loader.set_last_updated(now)
         time.sleep(2)
@@ -254,7 +250,7 @@ class LoaderTestCase(unittest.TestCase):
         self.changelog._execute("git commit -m test commit")
 
         # Changes need to be made
-        update_count = self.loader.update_changed()
+        update_count = self.loader.update_changed_entries()
         assert update_count == 2
 
         # Remove test repo and changelog
@@ -263,10 +259,6 @@ class LoaderTestCase(unittest.TestCase):
 
 
     def test_no_update(self):
-        # TMP: Remove test repo and changelog
-        self.changelog._execute("rm -rf %s" % repo_dir)
-        self.changelog._execute("rm %s" % changelog_abspath)
-
         # Make sure we're not going to clobber someone's existing repo
         assert not os.path.isdir(repo_dir)
         assert not os.path.exists(changelog_abspath)
@@ -280,12 +272,13 @@ class LoaderTestCase(unittest.TestCase):
 
         self.changelog._execute("git commit -m test commit")
 
+        # Set last updated time after changelog update to simulate an old changelog
         time.sleep(2)
         now = int(time.time())
         self.loader.set_last_updated(now)
 
         # Changes need to be made
-        update_count = self.loader.update_changed()
+        update_count = self.loader.update_changed_entries()
         assert update_count == 0
 
         # Remove test repo and changelog

@@ -10,6 +10,7 @@ from datetime import datetime
 from fnmatch import fnmatch
 
 from config import Path
+from changelog import ChangeLog
 
 # Use Git's low-level plumbing commands for scripting, not the high-level porcelain commands
 # See http://schacon.github.com/git/git.html
@@ -157,17 +158,28 @@ class Writer(object):
 class Loader(object):
     """Load blog entries into Neo4j."""
 
-    def __init__(self, graph, changelog, config):
-        self.graph = graph
-        self.changelog = changelog
+    def __init__(self, config, graph):
+        self.changelog = ChangeLog(config)
         self.parser = Parser(config)
         self.path = Path(config)
+        self.graph = graph
 
-    def update_all(self):
+    def update_entries(self):
+        if self.changelog_exists():
+            print "UPDATING CHANGED"
+            self.update_changed_entries()
+        else:
+            print "UPDATING ALL"
+            self.update_all_entries()
+
+    def changelog_exists(self):
+        return self.changelog.exists()
+
+    def update_all_entries(self):
         for source_abspath in self.parser.get_all_files():
             self.update_entry(source_abspath)
 
-    def update_changed(self):
+    def update_changed_entries(self):
         update_count = 0
 
         data = self.changelog.get()
@@ -180,14 +192,14 @@ class Loader(object):
         # Data is an OrderedDict, most recent changes last
         for source_path in reversed(data):
             status, timestamp = data[source_path]
-            if self.already_updated(timestamp, last_updated):
+            if self.old_timestamp(timestamp, last_updated):
                 break
             source_abspath = self.path.get_source_abspath(source_path)
             update_count += self.update_entry(source_abspath)
 
         return update_count
         
-    def already_updated(self, timestamp, last_updated):
+    def old_timestamp(self, timestamp, last_updated):
         # Timestamps with a time before the last_updated time 
         # were updated during the previous push
         return (timestamp <= last_updated)

@@ -116,7 +116,7 @@ class ChangeLog(object):
         
     def _execute(self, command):
         # TODO: Will Popen work with Heroku single-process instances? It looks like it does.
-        # Setting Git env vars to ensure proper paths when running outside or working dir
+        # Setting Git env vars to ensure proper paths when running outside of working dir
         os.putenv("GIT_DIR", self.path.get_repo_dir())
         os.putenv("GIT_WORK_TREE", self.path.get_working_dir()) 
         pipe = Popen(command, shell=True, cwd=".", stdout=PIPE, stderr=PIPE )
