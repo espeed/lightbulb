@@ -28,6 +28,7 @@ class Command(object):
         process = "%s %s" % (editor, source_path)
         return subprocess.call(process.split())
     
+    # dotemacs
 
     def new(self, filename):
         # TODO: parse out docid, maybe sign docid

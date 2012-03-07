@@ -10,44 +10,40 @@ from lightbulb.config import copy_etc
 from lightbulb.utils import get_template
 
 def setup(command_args):
-    working_dir = get_working_dir(command_args)
-    destination_dir = os.path.abspath("etc")
+    working_dir = os.getcwd()
+    project_folder = get_project_folder(command_args)
+    destination_dir = os.path.join(working_dir, project_folder, "etc")
     copy_etc(destination_dir)
     yaml_abspath = "%s/lightbulb.yaml" % destination_dir
     template = get_template(yaml_abspath)
     params = dict()
     params['working_dir'] = working_dir
     params['repo_dir'] = "%s/.git" % working_dir
-    params['project_folder'] = get_project_folder(working_dir)
+    params['project_folder'] = project_folder
     params['author'] = getpass.getuser()
     content = template.substitute(params)
     with open(yaml_abspath, "w") as fout:
         fout.write(content.encode('utf-8') + '\n')
+    yaml_path = "%s/etc/lightbulb.yaml" % project_folder
     print 
-    print "Double check the generated config file etc/lightbulb.yaml ..."
+    print "Double check the config file generated at %s ..." % yaml_path
     print
     print open(yaml_abspath,"rb").read()
 
-def get_project_folder(working_dir):
-    project_dir = os.getcwd()
-    start = working_dir
-    return os.path.relpath(project_dir, start)
-
-
-def get_working_dir(command_args):
+def get_project_folder(command_args):
     try:
-        working_dir = command_args[0]
-        return os.path.abspath(working_dir)
+        project_folder = command_args[0]
+        return project_folder
     except:
         print
         print "The lightbulb setup util needs to know two things to generate the config file: "
         print 
-        print "1. Your Git working directory (usually the parent of .git)."
-        print "2. Project folder (usually the ./blog subdirectory in the working directory)."
+        print "1. Your Git working directory (usually the parent of the .git repo dir)."
+        print "2. Project folder (usually the blog subdirectory in the working directory)."
         print
-        print "Run setup from within the project folder, and pass the working_dir as an arg."
+        print "Run setup from the working directory, and pass the project folder as an arg."
         print 
-        print "Usage: lightbulb setup /path/to/working_dir"
+        print "Example: lightbulb setup blog"
         print
         sys.exit(1)
         
