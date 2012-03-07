@@ -1,4 +1,5 @@
 import os
+import sys
 import uuid
 import getpass
 import datetime
@@ -23,8 +24,11 @@ class Command(object):
     def new(self, filename):
         # TODO: parse out docid, maybe sign docid
 
-        assert filename.endswith(self.config.source_ext), \
-            "File name must end with %s" % self.config.source_ext
+        try:
+            assert filename.endswith(self.config.source_ext)
+        except AssertionError as e:
+            print "File name must end with %s" % self.config.source_ext
+            sys.exit(1)
 
         docid = uuid.uuid4().hex
         date = datetime.datetime.now().strftime("%Y-%m-%d")

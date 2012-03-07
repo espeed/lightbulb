@@ -4,6 +4,7 @@
 # BSD License (see LICENSE for details)
 #
 import os
+import sys
 import yaml
 import distutils.dir_util
 
@@ -20,9 +21,7 @@ class Config(object):
     
     def __init__(self, working_dir=None, repo_dir=None, yaml_file=None):
         
-        filename = yaml_file or "%s/etc/lightbulb.yaml" % os.getcwd()
-        fin = open(filename)
-        yaml_map = yaml.load(fin)
+        yaml_map = self._open_yaml(yaml_file)
         
         #: Blog author
         self.author = yaml_map['author']
@@ -51,6 +50,16 @@ class Config(object):
         #: Source file extension 
         self.source_ext = yaml_map["source_ext"]
 
+    def _open_yaml(self, yaml_file=None):
+        try:
+            filename = yaml_file or "%s/etc/lightbulb.yaml" % os.getcwd()
+            fin = open(filename)
+            yaml_map = yaml.load(fin)
+            return yaml_map
+        except IOError as e:
+            print "Couldn't find lightbulb config file: ./etc/lightbulb.yaml."
+            print "To create it, run:  lightbulb setup" 
+            sys.exit(1)
 
 
 class Path(object):
