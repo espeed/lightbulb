@@ -25,7 +25,9 @@ class Command(object):
     def edit(self, filename):
         editor = self.config.editor
         source_path = self.new(filename)
-        subprocess.Popen([editor, source_path])
+        process = "%s %s" % (editor, source_path)
+        return subprocess.call(process.split())
+    
 
     def new(self, filename):
         # TODO: parse out docid, maybe sign docid
