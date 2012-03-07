@@ -29,6 +29,19 @@ And these Python modules:
 * Beaker 1.6.2 (https://github.com/bbangert/beaker)
 * Docutils 0.8 (http://docutils.sourceforge.net)
 
+How do I get started?
+
+$ pip install -U https://github.com/espeed/lightbulb/tarball/master
+$ cd <website_working_dir> 
+$ lightbulb setup blog
+$ cd blog
+$ lightbulb new example.rst
+
+And if you're using emacs, emacsclient is pre-configured as the editor for you:
+
+$ emacs --daemon 
+$ lightbulb edit example.rst
+
 Where are the docs?
 
 * http://bulbflow.com
