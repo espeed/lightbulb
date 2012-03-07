@@ -3,10 +3,11 @@ import sys
 import uuid
 import getpass
 import datetime
-from string import Template
+import subprocess
 
 from config import Config, Path
 from engine import Writer
+from utils import get_template
 
 # emacs server
 
@@ -20,6 +21,11 @@ class Command(object):
     def execute(self, command_name, command_args):
         command = getattr(self, command_name)
         return command(*command_args)
+
+    def edit(self, filename):
+        editor = self.config.editor
+        source_path = self.new(filename)
+        subprocess.Popen([editor, source_path])
 
     def new(self, filename):
         # TODO: parse out docid, maybe sign docid
@@ -36,19 +42,23 @@ class Command(object):
 
         params = dict(docid=docid, author=author, date=date)
         
-        template_path = "template.rst"
-        template = self._get_template(template_path)
+        template_path = self.path.get_rst_template_path()
+        template = get_template(template_path)
         content = template.substitute(params)
 
-        source_path = "source/%s" % filename
+        source_dir = self.path.get_source_dir()
+        source_abspath = "%s/%s" % (source_dir, filename)
 
-        self._make_dir(source_path)
+        self._make_dir(source_abspath)
 
-        print "Creating file:  %s" % source_path
-        fout = open(source_path, "w")
+        print "Creating file:  %s" % source_abspath
+        fout = open(source_abspath, "w")
         fout.writelines(content)
 
         fout.close()
+
+        return source_abspath
+        
 
     def _write_file(self, file_path, content):
         with open(file_path, "w") as fout:
@@ -63,7 +73,3 @@ class Command(object):
             os.makedirs(dirname)
 
 
-    def _get_template(self, template_path):
-        fin = open(template_path, "r")
-        text = fin.read().decode('utf-8')  # source_text
-        return Template(text)

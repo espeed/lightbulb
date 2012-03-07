@@ -5,6 +5,13 @@
 #
 import re
 from unicodedata import normalize
+from string import Template
+
+def get_template(template_path):
+    fin = open(template_path, "r")
+    text = fin.read().decode('utf-8')  # source_text
+    return Template(text)
+
 
 # Util for creating URL slugs (from http://flask.pocoo.org/snippets/5/)
 

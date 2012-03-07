@@ -10,19 +10,19 @@ working_dir:
 repo_dir:
 
 # Project folder, relative to the working directory
-project_folder: "blog" 
+project_folder: blog 
 
 # Source/read folder, relative to the project folder
-source_folder: "source"
+source_folder: source
 
 # Fragment/write folder, relative to the project folder
-fragment_folder: "templates/fragment"
+fragment_folder: templates/fragment
 
 # Changlog file name, relative to the working directory
-changelog_name: "changelog.pickle"
+changelog_name: changelog.pickle
         
 # Docutils writer
-writer_name: 'html4css1'
+writer_name: html4css1
 
 # Source file extension 
-source_ext: ".rst"
+source_ext: .rst

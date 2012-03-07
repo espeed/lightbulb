@@ -17,40 +17,29 @@ def copy_etc(destination_dir):
         
 
 class Config(object):
-    """Blog engine configuration."""
+    """
+    Blog engine configuration.
+
+    :ivar author: Blog author
+    :ivar working_dir: Full path to the working directory managed by the Git repo.
+    :ivar repo_dir: Full path to the Git repo directory. Defaults to working_dir/.git
+    :ivar project_folder: Project folder, relative to the working directory.
+    :ivar source_folder: Source/read folder, relative to the project folder.
+    :ivar fragment_folder: Fragment/write folder, relative to the project folder
+    :ivar changelog_name: Changlog file name, relative to the working directory.
+    :ivar writer_name: Docutils writer.
+    :ivar source_ext: Source file extension.
+    :ivar editor: Text editor command.
+
+    """
     
     def __init__(self, working_dir=None, repo_dir=None, yaml_file=None):
-        
-        yaml_map = self._open_yaml(yaml_file)
-        
-        #: Blog author
-        self.author = yaml_map['author']
 
-        #: Full path to the working directory managed by the Git repo
-        self.working_dir = working_dir or yaml_map['working_dir'] or os.getcwd()
+        self._config = self._get_config(yaml_file)
+        self._config['working_dir'] = self._get_working_dir(working_dir)
+        self._config['repo_dir'] = self._get_repo_dir(repo_dir)
 
-        #: Full path to the Git repo directory. Defaults to working_dir/.git
-        self.repo_dir = repo_dir or yaml_map['repo_dir'] or "%s/.git" % self.working_dir
-
-        #: Project folder, relative to the working directory
-        self.project_folder = yaml_map["project_folder"] 
-
-        #: Source/read folder, relative to the project folder
-        self.source_folder = yaml_map["source_folder"]
-
-        #: Fragment/write folder, relative to the project folder
-        self.fragment_folder = yaml_map["fragment_folder"]
-
-        # Changlog file name, relative to the working directory
-        self.changelog_name = yaml_map["changelog_name"]
-        
-        #: Docutils writer
-        self.writer_name = yaml_map['writer_name']
-
-        #: Source file extension 
-        self.source_ext = yaml_map["source_ext"]
-
-    def _open_yaml(self, yaml_file=None):
+    def _get_config(self, yaml_file=None):
         try:
             filename = yaml_file or "%s/etc/lightbulb.yaml" % os.getcwd()
             fin = open(filename)
@@ -61,11 +50,24 @@ class Config(object):
             print "To create it, run:  lightbulb setup" 
             sys.exit(1)
 
+    def _get_working_dir(self, working_dir):
+        return working_dir or self._config['working_dir'] or os.getcwd()
+
+    def _get_repo_dir(self, repo_dir):
+        return repo_dir or self._config['repo_dir'] or "%s/.git" % self.working_dir
+
+    def __getattr__(self, name):
+        try:
+            return self._config[name]
+        except:
+            raise AttributeError(name)
+        
 
 class Path(object):
     
     def __init__(self, config):
         self.config = config
+        self.etc_dir = "etc"
     
     # Top-level directories
 
@@ -88,6 +90,10 @@ class Path(object):
         # Full path to the source directory
         project_dir = self.get_project_dir()
         return os.path.join(project_dir, self.config.fragment_folder)
+
+    def get_etc_dir(self):
+        project_dir = self.get_project_dir()
+        return os.path.join(project_dir, self.etc_dir)
 
     # Source file paths
         
@@ -133,3 +139,9 @@ class Path(object):
         # Changelog should go in working dir because it may manage multiple projects
         return os.path.join(self.config.working_dir, self.config.changelog_name)
 
+    # Etc
+
+    def get_rst_template_path(self):
+        project_dir = self.get_project_dir()
+        return os.path.join(project_dir, self.etc_dir, "template.rst")
+    
