@@ -39,8 +39,8 @@ $ lightbulb new example.rst
 
 And if you're using emacs, emacsclient is pre-configured as the editor for you.
 
-First, make sure (server-start) is in your .emacs file. Then start emacs in 
-server mode, and open a file with the lightbulb edit command:
+First, make sure (server-start) is in your .emacs file so that Emacs starts in 
+server mode. Then start emacs, and open a file with the lightbulb edit command:
 
 $ emacs &
 $ lightbulb edit example.rst
