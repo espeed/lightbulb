@@ -3,13 +3,12 @@
 // BSD License (see LICENSE for details)
 //
 
+// To understand bundle notation, see http://groovy.codehaus.org/Multiple+Assignment
 
 def save_blog_entry(entry_bundle, author_id, topic_bundles) {
 
-  def create_indexed_vertex = { final Map bundle ->
-    data = bundle['data']
-    index_name = bundle['index_name']
-    keys = bundle['keys']
+  def create_indexed_vertex = { final List bundle ->
+    (data, index_name, keys) = bundle
     vertex = g.addVertex()
     index = g.idx(index_name)
     for (property in data) {
@@ -21,10 +20,8 @@ def save_blog_entry(entry_bundle, author_id, topic_bundles) {
     return vertex
   }
 
-  def update_indexed_vertex = { final Vertex vertex, final Map bundle ->
-    data = bundle['data']
-    index_name = bundle['index_name']
-    keys = bundle['keys']
+  def update_indexed_vertex = { final Vertex vertex, final List bundle ->
+    (data, index_name, keys) = bundle
     index = g.idx(index_name);
     // remove vertex from index
     for (String key in vertex.getPropertyKeys()) {
@@ -45,9 +42,9 @@ def save_blog_entry(entry_bundle, author_id, topic_bundles) {
     return vertex;
   }
 
-  def create_or_update_vertex = { final Map bundle, final String index_key ->
-    index_name = bundle['index_name']
-    index_value = bundle['data'][index_key]
+  def create_or_update_vertex = { final List bundle, final String index_key ->
+    (data, index_name, keys) = bundle
+    index_value = data[index_key]
     vertices = g.idx(index_name).get(index_key, index_value).toList()
     if (vertices.size() == 0) {
       vertex = create_indexed_vertex(bundle)
@@ -58,9 +55,9 @@ def save_blog_entry(entry_bundle, author_id, topic_bundles) {
     return vertex      
   }
 
-  def get_or_create_vertex = { final Map bundle, final String index_key ->
-    index_name = bundle['index_name']
-    index_value = bundle['data'][index_key]
+  def get_or_create_vertex = { final List bundle, final String index_key ->
+    (data, index_name, keys) = bundle
+    index_value = data[index_key]
     vertices = g.idx(index_name).get(index_key, index_value).toList()
     if (vertices.size() == 0) {
       vertex = create_indexed_vertex(bundle)
@@ -90,7 +87,7 @@ def save_blog_entry(entry_bundle, author_id, topic_bundles) {
     found = entry.out("author").filter{it == author}.count()
     if (!found) { g.addEdge(entry, author, "author"); }
     for (topic_bundle in topic_bundles)  {
-      topic = get_or_create_vertex(topic_bundle, "name");
+      topic = get_or_create_vertex(topic_bundle, "slug");
       // TODO: remove topics if needed
       found = entry.out("tagged").filter{it == topic}.count()
       if (!found) { g.addEdge(entry, topic, "tagged"); }

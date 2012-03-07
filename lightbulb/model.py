@@ -10,6 +10,8 @@ from bulbs.model import Node, NodeProxy, Relationship, build_data
 from bulbs.property import String, Integer, DateTime
 from bulbs.utils import extract, get_file_path
 
+from utils import slugify
+
 #
 # Bulbs database model for the Neo4j blog engine
 #
@@ -46,8 +48,10 @@ class Topic(Node):
     element_type = "topic"
 
     name = String(nullable=False)
+    slug = String("make_slug")
 
-
+    def make_slug(self):
+        return slugify(self.name)
 
 class Entry(Node):
     
@@ -86,6 +90,7 @@ class Entry(Node):
         tags = (tag.strip() for tag in data.pop('tags').split(','))
         topic_bundles = []
         for topic_name in tags:
+            #slug = slugify(topic_name)
             bundle = Topic(self._client).get_bundle(name=topic_name)
             topic_bundles.append(bundle)
         params['topic_bundles'] = topic_bundles

@@ -59,14 +59,14 @@ setup (
     license = 'BSD',
     author = 'James Thornton',
     author_email = 'james@jamesthornton.com',
-    description = 'A Git-Powered, Neo4j-Backed Python Blog Engine for Heroku.',
+    description = 'A Git-Powered, Neo4j-Backed Blog Engine for Heroku.',
     long_description = __doc__,
     keywords = "blog engine graph database DB persistence framework rexster gremlin cypher neo4j orientdb",   
     packages = find_packages(),
     include_package_data=True,
     zip_safe=False,
     platforms='any',
-    install_requires=['docutils', 'beaker', 'bulbs'],
+    install_requires=['docutils', 'beaker', 'bulbs', 'pyyaml'],
     classifiers = [
         "Programming Language :: Python",
         "Development Status :: 3 - Alpha",
@@ -81,5 +81,8 @@ setup (
         "Topic :: System :: Distributed Computing",
         ],
     cmdclass={'audit': run_audit},
-    test_suite='__main__.run_tests'
+    test_suite='__main__.run_tests',
+    entry_points = {
+        'console_scripts': ['lightbulb = lightbulb.cli:main'],
+    },
 )

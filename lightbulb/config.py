@@ -4,35 +4,53 @@
 # BSD License (see LICENSE for details)
 #
 import os
+import yaml
+import distutils.dir_util
+
+
+def copy_etc(destination_dir):
+    current_dir = os.path.dirname(__file__)
+    source_dir = "%s/etc" % current_dir
+    for filename in distutils.dir_util.copy_tree(source_dir, destination_dir, verbose=True):
+        print "Creating file: %s" % filename
+        
 
 class Config(object):
     """Blog engine configuration."""
     
-    def __init__(self, working_dir=None, repo_dir=None):
+    def __init__(self, working_dir=None, repo_dir=None, yaml_file=None):
         
+        filename = yaml_file or "%s/etc/lightbulb.yaml" % os.getcwd()
+        fin = open(filename)
+        yaml_map = yaml.load(fin)
+        
+        #: Blog author
+        self.author = yaml_map['author']
+
         #: Full path to the working directory managed by the Git repo
-        self.working_dir = working_dir or os.getcwd()
+        self.working_dir = working_dir or yaml_map['working_dir'] or os.getcwd()
 
         #: Full path to the Git repo directory. Defaults to working_dir/.git
-        self.repo_dir = repo_dir or "%s/.git" % self.working_dir
+        self.repo_dir = repo_dir or yaml_map['repo_dir'] or "%s/.git" % self.working_dir
 
         #: Project folder, relative to the working directory
-        self.project_folder = "blog" 
+        self.project_folder = yaml_map["project_folder"] 
 
         #: Source/read folder, relative to the project folder
-        self.source_folder = "source"
+        self.source_folder = yaml_map["source_folder"]
 
         #: Fragment/write folder, relative to the project folder
-        self.fragment_folder = "templates/fragment"
+        self.fragment_folder = yaml_map["fragment_folder"]
 
         # Changlog file name, relative to the working directory
-        self.changelog_name = "changelog.pickle"
+        self.changelog_name = yaml_map["changelog_name"]
         
         #: Docutils writer
-        self.writer_name = 'html4css1'
+        self.writer_name = yaml_map['writer_name']
 
         #: Source file extension 
-        self.source_ext = ".rst"
+        self.source_ext = yaml_map["source_ext"]
+
 
 
 class Path(object):

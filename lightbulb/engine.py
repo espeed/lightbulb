@@ -18,6 +18,24 @@ from changelog import ChangeLog
 
 # Unless --cached is given, work tree is needed
 
+
+# 4s Charm
+
+class Lightbulb(object):
+
+    def __init__(self, config, graph):
+        self.path = Path(config)
+        self.parser = Parser(config)
+        self.writer = Writer(config)
+        self.loader = Loader(config, graph)
+
+    def create_fragments(self):
+        self.writer.run()
+
+    def update_entries(self):
+        self.loader.update_entries()
+
+
 class Parser(object):
     """Parse ReStructuredText source files."""
 
@@ -71,7 +89,7 @@ class Parser(object):
         # http://docutils.sourceforge.net/docs/ref/rst/definitions.html
         module_abspath = os.path.abspath(__file__)
         module_dir = os.path.dirname(module_abspath)
-        source = self.read_source_file("%s/substitutions.rst" % module_dir)
+        source = self.read_source_file("%s/etc/substitutions.rst" % module_dir)
         return source
 
     def read_source_file(self, file_path):
@@ -225,23 +243,4 @@ class Loader(object):
         return last_updated
         
 
-class Lightbulb(object):
 
-    def __init__(self, config, graph):
-        self.writer = Writer(config)
-        self.loader = Loader(config, graph)
-
-    def build(self):
-        self.writer.run()
-
-    def update_entries(self):
-        self.loader.update_entries()
-
-    def update_all_entries(self):
-        self.loader.update_all_entries()
-
-    def update_changed_entries(self):
-        self.loader.update_changed_entries()
-
-    def changelog_exists(self):
-        self.loader.changelog_exists()
