@@ -2,8 +2,11 @@
 # Lightbulb Config File
 #
 
-# Author 
-author: james
+# Author Full Name
+name: James Thornton
+
+# Author username
+username: james
 
 # Source/read folder, relative to the project folder
 source_folder: source

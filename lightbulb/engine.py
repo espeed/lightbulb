@@ -11,27 +11,13 @@ from fnmatch import fnmatch
 
 from config import Path
 from changelog import ChangeLog
+from model import cache
 
 # Use Git's low-level plumbing commands for scripting, not the high-level porcelain commands
 # See http://schacon.github.com/git/git.html
 # http://stackoverflow.com/questions/2657935/checking-for-a-dirty-index-or-untracked-files-with-git
 
 # Unless --cached is given, work tree is needed
-
-
-class Lightbulb(object):
-
-    def __init__(self, config, graph):
-        self.path = Path(config)
-        self.parser = Parser(config)
-        self.writer = Writer(config)
-        self.loader = Loader(config, graph)
-
-    def create_fragments(self):
-        self.writer.run()
-
-    def update_entries(self):
-        self.loader.update_entries()
 
 
 class Parser(object):
@@ -152,6 +138,7 @@ class Writer(object):
 
     def run(self):
         for source_abspath in self.parser.get_all_files():
+            print source_abspath 
             fragment = self.parser.get_fragment(source_abspath)
             fragment_abspath = self.path.get_fragment_abspath(source_abspath)
             self.write_fragment(fragment, fragment_abspath)

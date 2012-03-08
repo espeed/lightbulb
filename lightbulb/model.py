@@ -3,6 +3,8 @@
 # Copyright 2012 James Thornton (http://jamesthornton.com)
 # BSD License (see LICENSE for details)
 #
+import re
+from unicodedata import normalize
 from beaker.cache import Cache
 
 from bulbs.neo4jserver import Graph as Neo4jGraph
@@ -10,7 +12,6 @@ from bulbs.model import Node, NodeProxy, Relationship, build_data
 from bulbs.property import String, Integer, DateTime
 from bulbs.utils import extract, get_file_path
 
-from utils import slugify
 
 #
 # Bulbs database model for the Neo4j blog engine
@@ -137,3 +138,20 @@ class Graph(Neo4jGraph):
         scripts_file = get_file_path(__file__, "gremlin.groovy")
         self.scripts.update(scripts_file)
 
+
+
+
+#
+# Util for creating URL slugs (from http://flask.pocoo.org/snippets/5/)
+#
+
+_punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.]+')
+
+def slugify(text, delim=u'-'):
+    """Generates an slightly worse ASCII-only slug."""
+    result = []
+    for word in _punct_re.split(text.lower()):
+        word = normalize('NFKD', word).encode('ascii', 'ignore')
+        if word:
+            result.append(word)
+    return unicode(delim.join(result))

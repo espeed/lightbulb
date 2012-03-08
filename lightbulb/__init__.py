@@ -5,7 +5,7 @@
 #
 from config import Config, Path
 from command import Command
-from engine import Lightbulb, Parser, Writer, Loader
+from engine import Parser, Writer, Loader
 from changelog import ChangeLog
 from model import Graph, cache
 

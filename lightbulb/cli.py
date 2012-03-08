@@ -1,10 +1,18 @@
 #!/usr/bin/env python
 
+import os
+import sys
 import argparse
 from lightbulb import Config, Command
 
 from setup import setup
 
+path = os.getcwd()
+sys.path.append(path)
+from confbulbs import graph
+
+# Valid commands: new, edit, init, build, update
+    
 def main():  
     parser = argparse.ArgumentParser()
     parser.add_argument('command_name')
@@ -16,9 +24,9 @@ def main():
 
     if command_name == "setup":
         return setup(command_args)
-
+    
     config = Config()
-    command = Command(config)
+    command = Command(config, graph)
 
     command.execute(command_name, command_args)
 

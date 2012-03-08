@@ -3,18 +3,25 @@
 # Copyright 2012 James Thornton (http://jamesthornton.com)
 # BSD License (see LICENSE for details)
 #
-import re
 import os
 import sys
-from unicodedata import normalize
-from subprocess import Popen, PIPE
 from string import Template
+from subprocess import Popen, PIPE
 
+from model import cache
 
 def get_template(template_path):
     fin = open(template_path, "r")
     text = fin.read().decode('utf-8')  # source_text
     return Template(text)
+
+def cache_author(graph, config):
+    # Store author ID in cache, keyed by username
+    cache_key = "username:%s" % config.username
+    author = graph.people.index.get_unique("username", config.username)
+    cache.put(cache_key, author.eid) if author else None
+    return author
+    
 
 #
 # Subprocess 
@@ -42,18 +49,3 @@ def validate_git_repo(dirname):
         print "You're not in a Git repo. Create one with:  git init"
         sys.exit(1)
 
-
-#
-# Util for creating URL slugs (from http://flask.pocoo.org/snippets/5/)
-#
-
-_punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.]+')
-
-def slugify(text, delim=u'-'):
-    """Generates an slightly worse ASCII-only slug."""
-    result = []
-    for word in _punct_re.split(text.lower()):
-        word = normalize('NFKD', word).encode('ascii', 'ignore')
-        if word:
-            result.append(word)
-    return unicode(delim.join(result))

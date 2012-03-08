@@ -16,7 +16,8 @@ class Config(object):
     """
     Blog engine configuration.
 
-    :ivar author: Blog author
+    :ivar name: Blog author's full name.
+    :ivar username: Blog author's username.
     :ivar working_dir: Full path to the working directory managed by the Git repo.
     :ivar git_dir: Full path to the Git repo directory. Defaults to working_dir/.git
     :ivar project_folder: Project folder, relative to the working directory.

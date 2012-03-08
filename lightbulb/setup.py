@@ -1,5 +1,6 @@
 import os
 import sys
+import pwd
 import getpass
 import distutils.dir_util
 from string import Template
@@ -46,8 +47,10 @@ class Setup(object):
         return os.path.join(project_etc, self.yaml_file)
 
     def get_params(self):
-        author = getpass.getuser()
-        params = dict(author=author)
+        username = getpass.getuser()
+        user = pwd.getpwnam(username)
+        name = user.pw_gecos
+        params = dict(name=name, username=username)
         return params
         
     def write_yaml_file(self, content):
