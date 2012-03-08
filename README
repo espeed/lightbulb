@@ -37,7 +37,7 @@ $ lightbulb setup blog
 $ cd blog
 $ lightbulb new example.rst
 
-And if you're using emacs, emacsclient is pre-configured as the editor for you.
+And if you're using Emacs, emacsclient is pre-configured as the editor for you.
 
 First, make sure (server-start) is in your .emacs file so that Emacs starts in 
 server mode. Then start Emacs, and open a file with the lightbulb edit command:

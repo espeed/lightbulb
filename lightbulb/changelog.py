@@ -1,67 +1,50 @@
-# -*- coding: utf-8 -*-
-#
-# Copyright 2012 James Thornton (http://jamesthornton.com)
-# BSD License (see LICENSE for details)
-#
-import os
 import re
+import os
 import time
-import pickle
-from subprocess import Popen, PIPE
-from collections import OrderedDict
 
 from config import Path
+from utils import execute
+from pickledb import PickleDB
 
-class ChangeLog(object):
-    """Blog entry change log. Updated upon Git commits."""
+# not using JSON because we want to maintain order in the dict
+class ChangeLog(PickleDB):
 
-    def __init__(self, config):
+    db_name = "changelog"
+
+    def initialize(self, config):
         self.config = config
         self.path = Path(config)
+        assert self.db_abspath == self.path.get_changelog_abspath()
 
-    def get(self):
-        try:
-            data = self._read()
-        except (IOError, EOFError) as e:
-            data =  OrderedDict()
-        return data
-        
     def update(self):
         # File exists so go ahead and read/write to the changlog
         if self.exists() is False:
+            print "CHANGELOG NOT FOUND: Will add/update all entries in database on push."
+            # Remove the old changelog from git so it doesn't persist on the server
+            self._remove_changelog()
             return 
         
         diff = self._get_diff()   
         if not diff:
             return
 
-        data = self.get()
-        data = self._write(data, diff)
-        self._display(data)
-        return data
-
-    def exists(self):
-        # Don't create a changelog unless file exists
-        changelog_abspath = self.path.get_changelog_abspath()
-        if not os.path.isfile(changelog_abspath):
-            print "CHANGELOG NOT FOUND - WILL ADD/UPDATE ALL ENTRIES IN DATABASE ON PUSH"
-            # Remove the old changelog from git so it doesn't persist on the server
-            self._remove_changelog()
-            return False
-        return True
-
-    def _read(self):
-        changelog_abspath = self.path.get_changelog_abspath()
-        with open(changelog_abspath, "r") as fin:
-            # changelog data is an OrderedDict
-            data = pickle.load(fin)   
-            #items = sorted(files.items(), key=itemgetter(1,1))
-        return data
+        self._write_diff(diff)
+        self._display()
         
-    def _write(self, data, diff):
+        return self.data
+
+    def _display(self):
+        print "CHANGELOG"
+        for filename in self.data:
+            status, timestamp = self.data[filename]
+            print timestamp, status, filename 
+        print
+        
+    def _write_diff(self, diff):
         source_dir = self.path.get_source_dir()
         start = self.path.get_working_dir()
         source_folder = os.path.relpath(source_dir, start)
+
         for status, filename in self._split_diff(diff):
             # filter out files that don't include the source_dir
             if re.search(source_folder, filename) and filename.endswith(self.config.source_ext):
@@ -69,25 +52,14 @@ class ChangeLog(object):
                 # We need it ordered by time so use timestamp instead
                 timestamp = self._current_timestamp()
                 # remove it from the dict and add it back so more recent entries are always last
-                data.pop(filename, None)
-                data[filename] = (status, timestamp)
-                    
-        # not using JSON because we want to maintain order in the dict
-        changelog_abspath = self.path.get_changelog_abspath()
-        with open(changelog_abspath, "w") as fout:
-            pickle.dump(data, fout)
+                self.data.pop(filename, None)
+                self.data[filename] = (status, timestamp)
+        self.write()
 
         # Add the changelog to git now that it has been updated.
         self._add_changelog()
 
-        return data
-
-    def _display(self, data):
-        print "CHANGELOG"
-        for filename in data:
-            status, timestamp = data[filename]
-            print timestamp, status, filename 
-        print
+        return self.data
 
     def _current_timestamp(self):
         return int(time.time())
@@ -99,7 +71,7 @@ class ChangeLog(object):
     def _get_diff(self):
         # git diff is NOT sorted by modified time
         #command = "git diff --cached --name-only"
-        repo_dir = self.path.get_repo_dir()
+        git_dir = self.path.get_git_dir()
         working_dir = self.path.get_working_dir()
         command = "git  diff --cached --name-status"
         return self._execute(command)
@@ -115,13 +87,7 @@ class ChangeLog(object):
         print self._execute(command)
         
     def _execute(self, command):
-        # TODO: Will Popen work with Heroku single-process instances? It looks like it does.
         # Setting Git env vars to ensure proper paths when running outside of working dir
-        os.putenv("GIT_DIR", self.path.get_repo_dir())
+        os.putenv("GIT_DIR", self.path.get_git_dir())
         os.putenv("GIT_WORK_TREE", self.path.get_working_dir()) 
-        pipe = Popen(command, shell=True, cwd=".", stdout=PIPE, stderr=PIPE )
-        (out, error) = pipe.communicate()
-        pipe.wait()
-        return out
-
-
+        return execute(command)

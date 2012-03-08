@@ -19,8 +19,6 @@ from changelog import ChangeLog
 # Unless --cached is given, work tree is needed
 
 
-# 4s Charm
-
 class Lightbulb(object):
 
     def __init__(self, config, graph):
@@ -177,9 +175,14 @@ class Loader(object):
     """Load blog entries into Neo4j."""
 
     def __init__(self, config, graph):
-        self.changelog = ChangeLog(config)
-        self.parser = Parser(config)
+        #self.changelog = ChangeLog(config)
         self.path = Path(config)
+
+        changelog_dir = self.path.get_working_etc()
+        self.changelog = ChangeLog(changelog_dir)
+        self.changelog.initialize(config)
+
+        self.parser = Parser(config)
         self.graph = graph
 
     def changelog_exists(self):
@@ -200,7 +203,7 @@ class Loader(object):
     def update_changed_entries(self):
         update_count = 0
 
-        data = self.changelog.get()
+        data = self.changelog.data
 
         if data is None:
             return update_count

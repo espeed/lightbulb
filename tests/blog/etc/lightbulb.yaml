@@ -3,7 +3,7 @@
 #
 
 # Author 
-author: $author
+author: james
 
 # Source/read folder, relative to the project folder
 source_folder: source
@@ -21,4 +21,5 @@ source_ext: .rst
 # Run emacs in server mode by adding (server-start) to your .emacs file.
 # Usage: lightbulb edit example.rst
 editor: emacsclient -n
+
 

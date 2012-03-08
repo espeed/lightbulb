@@ -5,6 +5,7 @@
 
 // To understand bundle notation, see http://groovy.codehaus.org/Multiple+Assignment
 
+
 def save_blog_entry(entry_bundle, author_id, topic_bundles) {
 
   def create_indexed_vertex = { final List bundle ->

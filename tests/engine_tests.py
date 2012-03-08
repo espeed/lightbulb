@@ -10,10 +10,15 @@ import unittest
 import docutils
 import docutils.core
 
-from lightbulb import Config, Path, Parser, Writer, Loader, ChangeLog, Graph, cache
+from lightbulb import Config, Path, Parser, Writer, Loader, Graph, cache
+from lightbulb.utils import execute
+from lightbulb.setup import Setup
 
 module_abspath = os.path.abspath(__file__)
 working_dir = os.path.dirname(module_abspath)
+git_dir = "%s/.git" % working_dir
+working_etc = "%s/etc" % working_dir
+project_folder = "blog"
 
 project_dir = "%s/blog" % working_dir
 source_dir = "%s/source" % project_dir
@@ -37,17 +42,35 @@ slug = "lightbulb"
 fragment_path = "lightbulb.html"
 source_path = "lightbulb.rst"
 
-config = Config(working_dir)
-path = Path(config)
-changelog_abspath = path.get_changelog_abspath()
-repo_dir = path.get_repo_dir()
+
+def remove_git_repo(changelog, changelog_abspath):
+    # Remove test repo and changelog
+    changelog._execute("rm -rf %s" % git_dir)
+    changelog._execute("rm %s" % changelog_abspath)
+
+def add_git_repo(changelog, changelog_abspath):
+    # Create test repo and changelog
+    changelog._execute("git init")
+    changelog._execute("touch %s" % changelog_abspath)
+    changelog._execute("git add .")
+    
 
 class ParserTestCase(unittest.TestCase):
 
     def setUp(self):
+        os.putenv("GIT_DIR", git_dir)
+        os.putenv("GIT_WORK_TREE", working_dir) 
+        execute("git init")
+        
+        setup = Setup(project_folder, working_dir, git_dir)
+        setup.run()
+
         self.config = Config(working_dir)
         self.path = Path(self.config)
         self.parser = Parser(self.config)
+
+        self.changelog_abspath = self.path.get_changelog_abspath()
+        self.git_dir =self.path.get_git_dir()
     
     def test_init(self):
         assert self.parser.config == self.config
@@ -156,9 +179,6 @@ class WriterTestCase(unittest.TestCase):
         self.config = Config(working_dir)
         self.writer = Writer(self.config)
 
-    #def test_init(self):
-        #assert self.writer.config == self.config
-
     def test_run(self):
         shutil.rmtree(build_dir, True)
         assert not os.path.isdir(build_dir)
@@ -207,6 +227,8 @@ class LoaderTestCase(unittest.TestCase):
         self.config = Config(working_dir)
         self.loader = Loader(self.config, self.graph)
         self.changelog = self.loader.changelog
+        self.changelog_abspath = self.loader.path.get_changelog_abspath()
+
         
         data = dict(username="james", name="James Thornton")
         james = self.graph.people.get_or_create("username", "james", data)
@@ -231,19 +253,14 @@ class LoaderTestCase(unittest.TestCase):
         assert entry2.subtitle == "Another subtitle here."
 
     def test_update_changed_entries(self):
-        # Make sure we're not going to clobber someone's existing repo
-        assert not os.path.isdir(repo_dir)
-        assert not os.path.exists(changelog_abspath)
+        remove_git_repo(self.changelog, self.changelog_abspath)
 
         # Set last updated time before changelog update to simulate a new changelog
         now = int(time.time())
         self.loader.set_last_updated(now)
         time.sleep(2)
-        
-        # Create test repo and changelog
-        self.changelog._execute("git init")
-        self.changelog._execute("touch %s" % changelog_abspath)
-        self.changelog._execute("git add .")
+
+        add_git_repo(self.changelog, self.changelog_abspath)
         
         self.changelog.update()
 
@@ -254,20 +271,14 @@ class LoaderTestCase(unittest.TestCase):
         assert update_count == 2
 
         # Remove test repo and changelog
-        self.changelog._execute("rm -rf %s" % repo_dir)
-        self.changelog._execute("rm %s" % changelog_abspath)
+        self.changelog._execute("rm -rf %s" % git_dir)
+        self.changelog._execute("rm %s" % self.changelog_abspath)
 
 
     def test_no_update(self):
-        # Make sure we're not going to clobber someone's existing repo
-        assert not os.path.isdir(repo_dir)
-        assert not os.path.exists(changelog_abspath)
-
-        # Create test repo and changelog
-        self.changelog._execute("git init")
-        self.changelog._execute("touch %s" % changelog_abspath)
-        self.changelog._execute("git add .")
-
+        remove_git_repo(self.changelog, self.changelog_abspath)
+        add_git_repo(self.changelog, self.changelog_abspath)
+        
         self.changelog.update()
 
         self.changelog._execute("git commit -m test commit")
@@ -281,9 +292,6 @@ class LoaderTestCase(unittest.TestCase):
         update_count = self.loader.update_changed_entries()
         assert update_count == 0
 
-        # Remove test repo and changelog
-        self.changelog._execute("rm -rf %s" % repo_dir)
-        self.changelog._execute("rm %s" % changelog_abspath)
 
     def test_set_and_get_last_updated(self):
         self.loader.set_last_updated(self.last_updated)
