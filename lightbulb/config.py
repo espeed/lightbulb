@@ -37,8 +37,10 @@ class Config(object):
         self._config = self._get_config()
 
     def _is_heroku(self):
-        return os.environ.get('NEO4J_REST_URL') is not None        
-    
+        is_heroku = os.environ.get('NEO4J_REST_URL') is not None        
+        print "IS HEROKU", is_heroku
+        return is_heroku
+
     def _get_working_dir(self, working_dir):
         if self._is_heroku():
             return os.getcwd()
