@@ -1,10 +1,10 @@
 import os
 import sys
 import pwd
+import shutil
 import getpass
 import distutils.dir_util
 from string import Template
-
 
 from pickledb import Registry
 from utils import get_template, get_working_dir, get_git_dir
@@ -82,7 +82,7 @@ class Setup(object):
 
 
 #
-# Setup Util
+# Setup Utils
 #
 
 def setup(command_args):
@@ -107,3 +107,14 @@ def setup(command_args):
     setup = Setup(project_folder, working_dir, git_dir)
     setup.run()
     setup.display_results()
+
+
+def confbulbs():
+    # Create the default Bulbs config in the working directory
+    filename = "confbulbs.py" 
+    module_dir = os.path.dirname(__file__)
+    working_dir = get_working_dir()
+    src = os.path.join(module_dir, filename)
+    dst = os.path.join(working_dir, filename)
+    print "Creating file: %s" % dst
+    return shutil.copyfile(src, dst)
