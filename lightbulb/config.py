@@ -31,11 +31,24 @@ class Config(object):
     
     def __init__(self, working_dir=None, git_dir=None):
 
-        self.working_dir = working_dir or get_working_dir()
-        self.git_dir = git_dir or get_git_dir()
+        self.working_dir = self._get_working_dir(working_dir)
+        self.git_dir = self._get_git_dir(git_dir)
         self.project_folder = self._get_project_folder()
         self._config = self._get_config()
+
+    def _is_heroku(self):
+        return os.environ.get('NEO4J_REST_URL') is not None        
     
+    def _get_working_dir(self, working_dir):
+        if self._is_heroku():
+            return os.getcwd()
+        return working_dir or get_working_dir()
+        
+    def _get_git_dir(self, git_dir):
+        if self._is_heroku():
+            return None
+        return git_dir or get_git_dir()        
+
     def _get_config(self):
         try:
             yaml_abspath = self._get_yaml_abspath()
