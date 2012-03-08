@@ -4,6 +4,7 @@ import uuid
 import getpass
 import datetime
 import subprocess
+import shutil
 
 from config import Config, Path
 from engine import Parser, Writer, Loader
@@ -74,7 +75,6 @@ class Command(object):
     def update(self):
         # Update blog entries
         self.loader.update_entries()
-
 
     # Execute one of the above methods
 
