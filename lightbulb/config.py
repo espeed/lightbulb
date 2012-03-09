@@ -13,9 +13,8 @@ from utils import get_working_dir, get_git_dir
 
 
 
-# Registry in working_dir/etc/registry.pickle to store project_dir value 
-
 class Registry(PickleDB):
+    """Registry is a pickle file stored in working_dir/etc/registy.pickle"""
 
     db_name = "registry"
 
@@ -77,6 +76,7 @@ class Config(object):
         return os.path.join(self.working_dir, project_folder, "etc")
                     
     def _get_project_folder(self):
+        # This is stored relative from working_dir
         registry = self.get_registry()
         project_folder = registry.get("project_folder")
         if project_folder is None:

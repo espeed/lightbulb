@@ -10,7 +10,7 @@ import subprocess
 import argparse
 
 from config import Config, Path
-from setup import setup, confbulbs
+from setup import setup, generate_bulbsconf
 from engine import Parser, Writer, Loader
 from utils import get_template, get_working_dir
 
@@ -110,17 +110,22 @@ def main():
     command_args = args.command_args
 
     if command_name == "setup":
-        confbulbs()
+        generate_bulbsconf()
         return setup(command_args)
 
-    if command_name == "confbulbs":
-        return confbulbs()
-        
-    path = os.getcwd()
-    sys.path.append(path)
-    from confbulbs import graph
+    if command_name == "bulbsconf":
+        return generate_bulbsconf()
 
     config = Config()
+        
+    #path = os.getcwd()
+    #sys.path.append(path)
+    path = config.working_dir
+    sys.path.insert(0, path)
+    # try to import graph from the local bulbsconf if it exists
+    from bulbsconf import graph
+    #sys.path.pop(0)
+
     command = Command(config, graph)
 
     command.execute(command_name, command_args)

@@ -109,9 +109,9 @@ def setup(command_args):
     setup.display_results()
 
 
-def confbulbs():
+def generate_bulbsconf():
     # Create the default Bulbs config in the working directory
-    filename = "confbulbs.py" 
+    filename = "bulbsconf.py" 
     module_dir = os.path.dirname(__file__)
     working_dir = get_working_dir()
     src = os.path.join(module_dir, filename)
