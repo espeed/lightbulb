@@ -6,7 +6,7 @@ import getpass
 import distutils.dir_util
 from string import Template
 
-from pickledb import Registry
+from config import Registry
 from utils import get_template, get_working_dir, get_git_dir
 
 

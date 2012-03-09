@@ -1,16 +1,22 @@
+#!/usr/bin/env python
+
 import os
 import sys
 import uuid
+import shutil
 import getpass
 import datetime
 import subprocess
-import shutil
+import argparse
 
 from config import Config, Path
+from setup import setup, confbulbs
 from engine import Parser, Writer, Loader
-from utils import get_template
+from utils import get_template, get_working_dir
 
-# emacs server
+
+# Valid commands: setup, new, edit, init, build, update, confbulbs
+
 
 class Command(object):
 
@@ -94,3 +100,31 @@ class Command(object):
             os.makedirs(dirname)
 
 
+def main():  
+    parser = argparse.ArgumentParser()
+    parser.add_argument('command_name')
+    parser.add_argument('command_args', nargs='*')
+    args = parser.parse_args()
+
+    command_name = args.command_name
+    command_args = args.command_args
+
+    if command_name == "setup":
+        confbulbs()
+        return setup(command_args)
+
+    if command_name == "confbulbs":
+        return confbulbs()
+        
+    path = os.getcwd()
+    sys.path.append(path)
+    from confbulbs import graph
+
+    config = Config()
+    command = Command(config, graph)
+
+    command.execute(command_name, command_args)
+
+
+if __name__ == "__main__":
+    main()

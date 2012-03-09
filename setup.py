@@ -83,6 +83,6 @@ setup (
     cmdclass={'audit': run_audit},
     test_suite='__main__.run_tests',
     entry_points = {
-        'console_scripts': ['lightbulb = lightbulb.cli:main'],
+        'console_scripts': ['lightbulb = lightbulb.command:main'],
     },
 )

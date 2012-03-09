@@ -8,8 +8,16 @@ import sys
 import yaml
 import distutils.dir_util
 
-from pickledb import Registry
+from pickledb import PickleDB
 from utils import get_working_dir, get_git_dir
+
+
+
+# Registry in working_dir/etc/registry.pickle to store project_dir value 
+
+class Registry(PickleDB):
+
+    db_name = "registry"
 
 
 class Config(object):

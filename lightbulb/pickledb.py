@@ -57,15 +57,6 @@ class PickleDB(object):
 
 
 #
-# Registry in working_dir/etc/registry.pickle to store project_dir value 
-#
-
-class Registry(PickleDB):
-
-    db_name = "registry"
-
-
-#
 # DataObject is not being used at the moment (see ARGGG below).
 #
 # ARGGG!: you can't combine Projects and Changes into one DB; 
