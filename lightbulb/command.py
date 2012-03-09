@@ -8,11 +8,12 @@ import getpass
 import datetime
 import subprocess
 import argparse
+from titlecase import titlecase
 
 from config import Config, Path
 from setup import setup, generate_bulbsconf
 from engine import Parser, Writer, Loader
-from utils import get_template, get_working_dir, get_title
+from utils import get_template, get_working_dir
 
 
 # Valid commands: setup, new, edit, init, build, update, bulbsconf
@@ -96,9 +97,16 @@ class Command(object):
         docid = uuid.uuid4().hex
         date = datetime.datetime.now().strftime("%Y-%m-%d")
         username = self.config.username or getpass.getuser()
-        title = get_title(filename, self.config)
+        title = self._get_title(filename)
         params = dict(title=title, docid=docid, author=username, date=date)
         return params
+
+    def _get_title(self, filename):
+        stub = os.path.splitext(filename)[0]
+        word_list = stub.split(self.config.separator)
+        words = " ".join(word_list)
+        title = titlecase(words)
+        return title
 
     def _write_file(self, file_path, content):
         with open(file_path, "w") as fout:
