@@ -12,13 +12,15 @@ import argparse
 from config import Config, Path
 from setup import setup, generate_bulbsconf
 from engine import Parser, Writer, Loader
-from utils import get_template, get_working_dir
+from utils import get_template, get_working_dir, get_title
 
 
-# Valid commands: setup, new, edit, init, build, update, confbulbs
-
+# Valid commands: setup, new, edit, init, build, update, bulbsconf
+# TODO: dotemacs
 
 class Command(object):
+
+
 
     def __init__(self, config, graph):
         self.config = config
@@ -28,7 +30,7 @@ class Command(object):
         self.writer = Writer(config)
         self.loader = Loader(config, graph)
 
-    # dotemacs
+    # Public methods
        
     def new(self, filename):
         # TODO: parse out docid, maybe sign docid
@@ -39,26 +41,12 @@ class Command(object):
             print "File name must end with %s" % self.config.source_ext
             sys.exit(1)
 
-        docid = uuid.uuid4().hex
-        date = datetime.datetime.now().strftime("%Y-%m-%d")
-        username = self.config.username or getpass.getuser()
-
-        params = dict(docid=docid, author=username, date=date)
-        
-        template_path = self.path.get_rst_template_path()
-        template = get_template(template_path)
-        content = template.substitute(params)
-
         source_dir = self.path.get_source_dir()
         source_abspath = "%s/%s" % (source_dir, filename)
-
-        self._make_dir(source_abspath)
+        content = self._build_initial_source(filename)
 
         print "Creating file:  %s" % source_abspath
-        fout = open(source_abspath, "w")
-        fout.writelines(content)
-
-        fout.close()
+        self._create_file(source_abspath, content)
 
         return source_abspath
 
@@ -84,9 +72,33 @@ class Command(object):
 
     # Execute one of the above methods
 
-    def execute(self, command_name, command_args):
+    def _execute(self, command_name, command_args):
         command = getattr(self, command_name)
         return command(*command_args)
+
+    # Private methods
+
+    def _create_file(self, source_abspath, content):
+        self._make_dir(source_abspath)
+        with open(source_abspath, "w") as fout:
+            fout.writelines(content)
+                                     
+    def _build_initial_source(self, filename):
+        # generat the source from template
+        template_path = self.path.get_rst_template_path()
+        template = get_template(template_path)
+        params = self._get_params(filename)
+        source = template.substitute(params)
+        return source
+
+    def _get_params(self, filename):
+        # Get template params
+        docid = uuid.uuid4().hex
+        date = datetime.datetime.now().strftime("%Y-%m-%d")
+        username = self.config.username or getpass.getuser()
+        title = get_title(filename, self.config)
+        params = dict(title=title, docid=docid, author=username, date=date)
+        return params
 
     def _write_file(self, file_path, content):
         with open(file_path, "w") as fout:
@@ -117,18 +129,14 @@ def main():
         return generate_bulbsconf()
 
     config = Config()
-        
-    #path = os.getcwd()
-    #sys.path.append(path)
+    
+    # try to import graph from the local bulbsconf if it exists
     path = config.working_dir
     sys.path.insert(0, path)
-    # try to import graph from the local bulbsconf if it exists
     from bulbsconf import graph
-    #sys.path.pop(0)
 
     command = Command(config, graph)
-
-    command.execute(command_name, command_args)
+    command._execute(command_name, command_args)
 
 
 if __name__ == "__main__":

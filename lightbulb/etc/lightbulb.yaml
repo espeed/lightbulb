@@ -20,6 +20,9 @@ writer_name: html4css1
 # Source file extension 
 source_ext: .rst
 
+# File/url word separator
+separator: "-"
+
 # Your text editor. emacsclient opens files in an existing emacs session. 
 # Run emacs in server mode by adding (server-start) to your .emacs file.
 # Usage: lightbulb edit example.rst

@@ -7,6 +7,7 @@ import os
 import sys
 from string import Template
 from subprocess import Popen, PIPE
+from titlecase import titlecase
 
 from model import cache
 
@@ -49,3 +50,14 @@ def validate_git_repo(dirname):
         print "You're not in a Git repo. Create one with:  git init"
         sys.exit(1)
 
+
+#
+# Text Processing
+#
+
+def get_title(filename, config):
+    stub = os.path.splitext(filename)[0]
+    word_list = stub.split(config.separator)
+    words = " ".join(word_list)
+    title = titlecase(words)
+    return title
