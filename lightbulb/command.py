@@ -21,8 +21,6 @@ from utils import get_template, get_working_dir
 
 class Command(object):
 
-
-
     def __init__(self, config, graph):
         self.config = config
         self.graph = graph
@@ -43,7 +41,7 @@ class Command(object):
             sys.exit(1)
 
         source_dir = self.path.get_source_dir()
-        source_abspath = "%s/%s" % (source_dir, filename)
+        source_abspath = os.path.join(source_dir, filename)
         content = self._build_initial_source(filename)
 
         print "Creating file:  %s" % source_abspath
@@ -98,7 +96,8 @@ class Command(object):
         date = datetime.datetime.now().strftime("%Y-%m-%d")
         username = self.config.username or getpass.getuser()
         title = self._get_title(filename)
-        params = dict(title=title, docid=docid, author=username, date=date)
+        title_line = "=" * len(title)
+        params = dict(title=title, title_line=title_line, docid=docid, author=username, date=date)
         return params
 
     def _get_title(self, filename):

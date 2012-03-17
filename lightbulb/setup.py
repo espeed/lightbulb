@@ -74,9 +74,10 @@ class Setup(object):
 
     def display_results(self):
         # TODO: print working_dir, git_dir, project_folder
+        yaml_path = os.path.join(os.curdir, self.project_folder, "etc", self.yaml_file)
         yaml_abspath = self.get_yaml_abspath()
         print 
-        print "Double check the config file generated at %s ..." % yaml_abspath
+        print "Double check the config file generated at %s ..." % yaml_path
         print
         print open(yaml_abspath,"rb").read()
 

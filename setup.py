@@ -66,7 +66,7 @@ setup (
     include_package_data=True,
     zip_safe=False,
     platforms='any',
-    install_requires=['docutils', 'beaker', 'bulbs', 'pyyaml', 'ez_setup', 'titlecase'],
+    install_requires=['docutils', 'pygments', 'beaker', 'bulbs', 'pyyaml', 'ez_setup', 'titlecase'],
     classifiers = [
         "Programming Language :: Python",
         "Development Status :: 3 - Alpha",

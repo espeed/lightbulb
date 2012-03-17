@@ -4,10 +4,13 @@
 # BSD License (see LICENSE for details)
 #
 import os
-import docutils
-import docutils.core
 from datetime import datetime
 from fnmatch import fnmatch
+
+import docutils
+import docutils.core
+from docutils.parsers.rst import directives
+from directives.pygments_code_block_directive import CodeBlock
 
 from config import Path
 from changelog import ChangeLog
@@ -19,6 +22,14 @@ from model import cache
 
 # Unless --cached is given, work tree is needed
 
+# Register the code block directive
+directives.register_directive("code", CodeBlock)
+
+# container directive
+# rst: supports class attributes and id attribute (markdown requires you to drop down into HTML)
+# extensible: ReStructuredText is extensible (you can add your own "directives"). 
+# http://stackoverflow.com/questions/34276/markdown-versus-restructuredtext
+# https://en.wikipedia.org/wiki/Lightweight_markup_language
 
 class Parser(object):
     """Parse ReStructuredText source files."""
