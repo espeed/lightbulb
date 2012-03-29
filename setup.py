@@ -8,8 +8,8 @@ A Git-Powered, Neo4j-Backed Python Blog Engine for Heroku.
 import sys
 from setuptools import Command, setup, find_packages
 
-from ez_setup import use_setuptools
-use_setuptools()
+#from ez_setup import use_setuptools
+#use_setuptools()
 
 class run_audit(Command):
     """Audits source code using PyFlakes for following issues:
@@ -69,7 +69,9 @@ setup (
     include_package_data=True,
     zip_safe=False,
     platforms='any',
-    install_requires=['docutils', 'pygments', 'beaker', 'bulbs', 'pyyaml', 'ez_setup', 'titlecase'],
+#    install_requires=['docutils', 'pygments', 'beaker', 'bulbs', 'pyyaml', 'ez_setup', 'titlecase'],
+    install_requires=['docutils', 'pygments', 'beaker', 'bulbs', 'pyyaml'],
+
     classifiers = [
         "Programming Language :: Python",
         "Development Status :: 3 - Alpha",
