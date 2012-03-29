@@ -8,6 +8,9 @@ A Git-Powered, Neo4j-Backed Python Blog Engine for Heroku.
 import sys
 from setuptools import Command, setup, find_packages
 
+from ez_setup import use_setuptools
+use_setuptools()
+
 class run_audit(Command):
     """Audits source code using PyFlakes for following issues:
        - Names which are used but not defined or used before they are defined.

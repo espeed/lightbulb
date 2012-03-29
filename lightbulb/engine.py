@@ -31,6 +31,9 @@ directives.register_directive("code", CodeBlock)
 # http://stackoverflow.com/questions/34276/markdown-versus-restructuredtext
 # https://en.wikipedia.org/wiki/Lightweight_markup_language
 
+# See Sphinx image/figure anchor points...
+# http://packages.python.org/an_example_pypi_project/sphinx.html
+
 class Parser(object):
     """Parse ReStructuredText source files."""
 
