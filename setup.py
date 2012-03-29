@@ -70,7 +70,7 @@ setup (
     zip_safe=False,
     platforms='any',
 #    install_requires=['docutils', 'pygments', 'beaker', 'bulbs', 'pyyaml', 'ez_setup', 'titlecase'],
-    install_requires=['docutils', 'pygments', 'beaker', 'bulbs', 'pyyaml'],
+    install_requires=['docutils', 'pygments', 'beaker', 'bulbs', 'pyyaml', 'nose'],
 
     classifiers = [
         "Programming Language :: Python",

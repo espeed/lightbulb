@@ -8,7 +8,7 @@ import getpass
 import datetime
 import subprocess
 import argparse
-#from titlecase import titlecase
+from .titlecase import titlecase
 
 from config import Config, Path
 from setup import setup, generate_bulbsconf
@@ -104,10 +104,9 @@ class Command(object):
         stub = os.path.splitext(filename)[0]
         word_list = stub.split(self.config.separator)
         words = " ".join(word_list)
-        #title = titlecase(words)
-        #return title
-        return words
-
+        title = titlecase(words)
+        return title
+        
     def _write_file(self, file_path, content):
         with open(file_path, "w") as fout:
             fout.write(content.encode('utf-8') + '\n')
